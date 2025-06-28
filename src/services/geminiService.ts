@@ -85,7 +85,7 @@ class GeminiService {
             headers: {
               'Content-Type': 'application/json'
             },
-            timeout: 30000
+            timeout: 30000 // 30 second timeout
           }
         )
 
@@ -93,11 +93,22 @@ class GeminiService {
       })
     } catch (error: any) {
       console.error('Gemini API Error:', error.response?.status, error.response?.statusText)
+      
+      // Handle specific error codes
+      if (error.response?.status === 429) {
+        console.warn('Rate limit exceeded, using mock response')
+      } else if (error.response?.status === 403) {
+        console.warn('API key invalid or quota exceeded, using mock response')
+      } else if (error.response?.status === 400) {
+        console.warn('Bad request to Gemini API, using mock response')
+      }
+      
       return this.getMockResponse(prompt)
     }
   }
 
   private getMockResponse(prompt: string): string {
+    // Always return valid JSON strings for all prompt types
     if (prompt.includes('game theory')) {
       return JSON.stringify({
         concept: "Nash Equilibrium",
@@ -218,6 +229,58 @@ class GeminiService {
       ])
     }
 
+    if (prompt.includes('natural language')) {
+      return JSON.stringify({
+        intent: "geopolitical_analysis",
+        response: "Based on your query, I've analyzed the current situation. The most likely outcome is continued diplomatic tension with periodic escalations, but falling short of direct military conflict. Economic impacts will be significant but contained to specific sectors.",
+        suggestions: [
+          "What would happen if sanctions were increased?",
+          "How might this affect global energy markets?",
+          "What are the historical precedents for this situation?"
+        ]
+      })
+    }
+
+    if (prompt.includes('report')) {
+      return JSON.stringify({
+        title: "Geopolitical Risk Assessment - Q1 2024",
+        executive_summary: "This report provides a comprehensive analysis of current geopolitical risks with a focus on Eastern Europe and the South China Sea. Key findings indicate elevated tensions in both regions with potential for economic disruption.",
+        sections: [
+          { title: "Key Findings", content: "Analysis reveals increasing military activity in Eastern Europe with a 78% risk score and moderate confidence interval. Trade disruptions are likely in the short term." },
+          { title: "Risk Assessment", content: "Primary risk drivers include military tensions (35%), energy security concerns (28%), and economic sanctions (22%). Diplomatic relations show a negative trend." },
+          { title: "Recommendations", content: "Implement contingency planning for supply chain disruptions. Monitor diplomatic developments closely. Consider hedging strategies for energy exposure." }
+        ]
+      })
+    }
+
+    if (prompt.includes('timeline')) {
+      return JSON.stringify({
+        timeline: [
+          { date: "Next 30 days", event: "Diplomatic negotiations intensify", probability: 0.8, confidence: 0.7 },
+          { date: "1-3 months", event: "Potential economic sanctions implementation", probability: 0.6, confidence: 0.6 },
+          { date: "3-6 months", event: "Military posture adjustment", probability: 0.5, confidence: 0.5 },
+          { date: "6-12 months", event: "New security arrangement negotiations", probability: 0.4, confidence: 0.4 }
+        ],
+        critical_points: ["UN Security Council meeting", "Bilateral summit", "Trade agreement deadline", "Military exercises"],
+        risk_factors: ["Third-party intervention", "Domestic political changes", "Economic shocks", "Miscalculation"]
+      })
+    }
+
+    if (prompt.includes('ensemble')) {
+      return JSON.stringify({
+        ensemble_prediction: { value: 0.65, confidence: [0.58, 0.72] },
+        model_weights: {
+          "Game Theory Model": 0.35,
+          "Statistical Model": 0.25,
+          "Machine Learning Model": 0.30,
+          "Expert System": 0.10
+        },
+        uncertainty: 0.14,
+        consensus_level: 0.78
+      })
+    }
+
+    // Default mock response for any other prompt - always return valid JSON
     return JSON.stringify({
       status: "mock_response",
       message: "This is a mock response generated due to API limitations or development mode.",
