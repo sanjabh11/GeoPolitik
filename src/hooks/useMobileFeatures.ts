@@ -190,7 +190,7 @@ export function useMobileFeatures() {
           },
           {
             concept: 'Prisoner\'s Dilemma',
-            explanation: 'A game theory scenario where two rational actors might not cooperate even when it's in their best interests.',
+            explanation: 'A game theory scenario where two rational actors might not cooperate even when it\'s in their best interests.',
             geopoliticalExample: 'Trade negotiations where countries might impose tariffs despite mutual benefits of free trade.'
           }
         ],
