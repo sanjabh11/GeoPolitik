@@ -50,21 +50,7 @@ GeoPolitik is an advanced AI-powered platform that combines interactive game the
 - Mobile-optimized UI with touch-friendly interfaces
 - Installable app experience
 
-### 7. **Enterprise Features**
-- Single Sign-On (SSO) integration
-- Advanced analytics dashboard
-- Custom branding options
-- API marketplace for third-party integrations
-- White-label solutions
-
-### 8. **Collaborative Workspace**
-- Document sharing and editing
-- Real-time commenting and discussions
-- Version control for analyses
-- Team management with permissions
-- Document locking and access controls
-
-### 9. **Advanced AI Features**
+### 7. **Advanced AI Features**
 - Natural language querying for insights
 - Automated report generation
 - Predictive timeline analysis
@@ -167,18 +153,16 @@ npm run preview
 5. **Export Reports**: Generate comprehensive analysis reports
 
 ### For Researchers
-1. **Historical Analysis**: Access pattern recognition and trend analysis
-2. **Model Validation**: Use backtesting features for model verification
-3. **Collaborative Tools**: Share analyses and collaborate on research
-4. **API Integration**: Integrate with existing research workflows
-5. **Custom Models**: Train specialized AI models on your data
+1. **Advanced Analytics**: Use natural language queries for insights
+2. **Ensemble Modeling**: Combine multiple prediction models
+3. **Timeline Analysis**: Generate predictive timelines for scenarios
+4. **Automated Reports**: Create detailed reports with AI assistance
 
-### For Enterprise Users
-1. **Team Management**: Set up user roles and permissions
-2. **Custom Branding**: Apply your organization's visual identity
-3. **SSO Integration**: Connect with your identity provider
-4. **API Access**: Integrate with your existing systems
-5. **Advanced Analytics**: Track usage and performance metrics
+### For Mobile Users
+1. **Install PWA**: Add to home screen for app-like experience
+2. **Offline Mode**: Download data for offline access
+3. **Push Notifications**: Get alerts for critical events
+4. **Mobile UI**: Enjoy touch-optimized interface and gestures
 
 ## 🔧 Configuration
 
@@ -208,25 +192,13 @@ src/
 ```
 
 ### Database Schema
-```sql
--- User profiles and authentication
-user_profiles (id, role, preferences, created_at, updated_at)
-
--- Learning progress tracking
-learning_progress (id, user_id, module_id, completion_percentage, performance_data)
-
--- Risk assessments with expiration
-risk_assessments (id, region, risk_score, factors, confidence_interval, expires_at)
-
--- Scenario simulations
-scenario_simulations (id, user_id, scenario_config, results, created_at)
-
--- Crisis events and monitoring
-crisis_events (id, title, region, severity, category, description, confidence)
-
--- Alert configurations
-alert_configurations (id, user_id, alert_type, criteria, notification_settings)
-```
+The application uses Supabase with the following key tables:
+- `user_profiles`: User information and preferences
+- `learning_progress`: Game theory tutorial progress tracking
+- `risk_assessments`: Geopolitical risk analysis results
+- `crisis_events`: Detected crisis events and monitoring
+- `scenario_simulations`: Game theory simulation configurations and results
+- `economic_models`: Economic impact analysis data
 
 ## 🧪 Testing
 

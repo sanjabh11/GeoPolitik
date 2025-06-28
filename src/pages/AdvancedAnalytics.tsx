@@ -5,162 +5,67 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { geminiService } from '../services/geminiService';
-import { useToast } from '../hooks/useToast';
-
-interface NLQuery {
-  id: string;
-  query: string;
-  timestamp: string;
-  response: any;
-}
-
-interface Report {
-  id: string;
-  title: string;
-  type: 'risk_assessment' | 'economic_analysis' | 'crisis_report' | 'strategic_overview';
-  generated_at: string;
-  sections: Array<{
-    title: string;
-    content: string;
-  }>;
-}
-
-interface TimelinePrediction {
-  timeline: Array<{
-    date: string;
-    event: string;
-    probability: number;
-    confidence: number;
-  }>;
-  critical_points: string[];
-  risk_factors: string[];
-}
+import { useAdvancedAnalytics } from '../hooks/useAdvancedAnalytics';
 
 export default function AdvancedAnalytics() {
   const [activeTab, setActiveTab] = useState<'nlquery' | 'reports' | 'timeline' | 'ensemble'>('nlquery');
   const [nlQuery, setNlQuery] = useState('');
-  const [queryHistory, setQueryHistory] = useState<NLQuery[]>([]);
-  const [currentResponse, setCurrentResponse] = useState<any>(null);
-  const [reports, setReports] = useState<Report[]>([]);
-  const [timelinePrediction, setTimelinePrediction] = useState<TimelinePrediction | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
-  const { showToast } = useToast();
+  const {
+    loading,
+    error,
+    queryHistory,
+    reports,
+    timelinePrediction,
+    currentResponse,
+    processNaturalLanguageQuery,
+    generateAutomatedReport,
+    generatePredictiveTimeline,
+    generateEnsemblePrediction,
+    loadQueryHistory,
+    loadReports
+  } = useAdvancedAnalytics();
+
+  useEffect(() => {
+    // Load saved data on component mount
+    loadQueryHistory();
+    loadReports();
+  }, []);
 
   const handleNLQuery = async () => {
     if (!nlQuery.trim()) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await geminiService.processNaturalLanguageQuery(nlQuery);
-      
-      const newQuery: NLQuery = {
-        id: Date.now().toString(),
-        query: nlQuery,
-        timestamp: new Date().toISOString(),
-        response
-      };
-      
-      setQueryHistory(prev => [newQuery, ...prev.slice(0, 9)]);
-      setCurrentResponse(response);
-      setNlQuery('');
-      showToast('success', 'Query Processed', 'Natural language analysis complete');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Query processing failed';
-      setError(errorMessage);
-      showToast('error', 'Query Failed', errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    await processNaturalLanguageQuery(nlQuery);
+    setNlQuery('');
   };
 
-  const generateReport = async (type: string) => {
-    setLoading(true);
-    setError(null);
+  const handleGenerateReport = async (type: string) => {
+    const mockData = {
+      regions: ['Eastern Europe', 'South China Sea'],
+      timeframe: 'Q1 2024',
+      factors: ['Military Tensions', 'Economic Sanctions']
+    };
     
-    try {
-      const mockData = {
-        regions: ['Eastern Europe', 'South China Sea'],
-        timeframe: 'Q1 2024',
-        factors: ['Military Tensions', 'Economic Sanctions']
-      };
-      
-      const reportData = await geminiService.generateAutomatedReport(type, mockData, 'Q1 2024');
-      
-      const newReport: Report = {
-        id: Date.now().toString(),
-        title: reportData.title || `${type} Report - ${new Date().toLocaleDateString()}`,
-        type: type as any,
-        generated_at: new Date().toISOString(),
-        sections: reportData.sections || [
-          { title: 'Executive Summary', content: reportData.executive_summary || 'Comprehensive analysis summary' },
-          { title: 'Key Findings', content: 'Analysis of primary trends and developments' },
-          { title: 'Recommendations', content: 'Strategic recommendations based on analysis' }
-        ]
-      };
-      
-      setReports(prev => [newReport, ...prev.slice(0, 9)]);
-      showToast('success', 'Report Generated', `${type} report created successfully`);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Report generation failed';
-      setError(errorMessage);
-      showToast('error', 'Report Failed', errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    await generateAutomatedReport(type, mockData, 'Q1 2024');
   };
 
-  const generateTimeline = async () => {
-    setLoading(true);
-    setError(null);
+  const handleGenerateTimeline = async () => {
+    const scenario = {
+      type: 'geopolitical_crisis',
+      region: 'Eastern Europe',
+      factors: ['Military Buildup', 'Diplomatic Tensions']
+    };
     
-    try {
-      const scenario = {
-        type: 'geopolitical_crisis',
-        region: 'Eastern Europe',
-        factors: ['Military Buildup', 'Diplomatic Tensions']
-      };
-      
-      const timeline = await geminiService.generatePredictiveTimeline(scenario, '12 months');
-      setTimelinePrediction(timeline);
-      showToast('success', 'Timeline Generated', 'Predictive timeline analysis complete');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Timeline generation failed';
-      setError(errorMessage);
-      showToast('error', 'Timeline Failed', errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    await generatePredictiveTimeline(scenario, '12 months');
   };
 
-  const runEnsembleAnalysis = async () => {
-    setLoading(true);
-    setError(null);
+  const handleEnsembleAnalysis = async () => {
+    const models = ['Game Theory Model', 'Statistical Model', 'Machine Learning Model', 'Expert System'];
+    const data = {
+      region: 'Global',
+      indicators: ['Political Stability', 'Economic Growth', 'Military Activity']
+    };
     
-    try {
-      const models = ['Game Theory Model', 'Statistical Model', 'Machine Learning Model', 'Expert System'];
-      const data = {
-        region: 'Global',
-        indicators: ['Political Stability', 'Economic Growth', 'Military Activity']
-      };
-      
-      const ensemble = await geminiService.generateEnsemblePrediction(models, data);
-      setCurrentResponse({
-        type: 'ensemble_prediction',
-        data: ensemble
-      });
-      showToast('success', 'Ensemble Analysis Complete', 'Multi-model prediction generated');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Ensemble analysis failed';
-      setError(errorMessage);
-      showToast('error', 'Analysis Failed', errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    await generateEnsemblePrediction(models, data);
   };
 
   return (
@@ -436,7 +341,7 @@ export default function AdvancedAnalytics() {
                         <Button
                           key={reportType.type}
                           variant="outline"
-                          onClick={() => generateReport(reportType.type)}
+                          onClick={() => handleGenerateReport(reportType.type)}
                           disabled={loading}
                           className="w-full justify-start"
                         >
@@ -515,7 +420,7 @@ export default function AdvancedAnalytics() {
                     <Timeline className="h-5 w-5 mr-2 text-accent-400" />
                     Predictive Timeline Analysis
                   </h2>
-                  <Button onClick={generateTimeline} loading={loading}>
+                  <Button onClick={handleGenerateTimeline} loading={loading}>
                     <Zap className="h-4 w-4 mr-2" />
                     Generate Timeline
                   </Button>
@@ -596,7 +501,7 @@ export default function AdvancedAnalytics() {
                     <Brain className="h-5 w-5 mr-2 text-primary-400" />
                     Ensemble Model Analysis
                   </h2>
-                  <Button onClick={runEnsembleAnalysis} loading={loading}>
+                  <Button onClick={handleEnsembleAnalysis} loading={loading}>
                     <Brain className="h-4 w-4 mr-2" />
                     Run Ensemble Analysis
                   </Button>

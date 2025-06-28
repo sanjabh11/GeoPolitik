@@ -354,55 +354,127 @@ const useCrisisMonitoring = () => {
 };
 ```
 
-### User Story 5: Collaborative Workspace
+### User Story 5: Advanced Analytics
 
-**As a** research team lead  
-**I want to** collaborate with team members on analyses  
-**So that** we can produce comprehensive strategic assessments
+**As a** research analyst  
+**I want to** use natural language queries and ensemble models  
+**So that** I can gain deeper insights and more accurate predictions
 
 #### Implementation Details
-- **Document Sharing**: Real-time collaborative document editing
-- **Version Control**: Track changes and document history
-- **Comments and Discussions**: In-document commenting system
-- **Access Control**: Permissions and document locking
-- **Team Management**: User roles and organizational structure
+- **Natural Language Querying**: Ask questions in plain English
+- **Automated Report Generation**: Create comprehensive analysis reports
+- **Predictive Timeline Analysis**: Generate event timelines with probabilities
+- **Ensemble Prediction Methods**: Combine multiple models for better accuracy
 
 #### Technical Components
 ```typescript
-// Collaborative Document Service
-const useCollaborativeWorkspace = () => {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+// Advanced Analytics Hook
+const useAdvancedAnalytics = () => {
+  const [currentResponse, setCurrentResponse] = useState<any>(null);
   
-  const loadDocuments = async () => {
-    const { data } = await supabase
-      .from('documents')
-      .select('*')
-      .order('updated_at', { ascending: false });
-    
-    setDocuments(data || []);
-  };
-  
-  const saveDocument = async (document: Document) => {
-    const { data } = await supabase
-      .from('documents')
-      .upsert({
-        id: document.id,
-        title: document.title,
-        content: document.content,
-        owner_id: document.owner_id,
-        shared_with: document.shared_with,
-        version: document.version + 1,
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-    
-    setSelectedDocument(data);
-    await loadDocuments();
+  const processNaturalLanguageQuery = async (query: string) => {
+    const response = await geminiService.processNaturalLanguageQuery(query);
+    setCurrentResponse(response);
+    return response;
   };
 
-  return { documents, selectedDocument, loadDocuments, saveDocument };
+  const generateAutomatedReport = async (type: string, data: any, timeframe: string) => {
+    const reportData = await geminiService.generateAutomatedReport(type, data, timeframe);
+    return reportData;
+  };
+
+  const generatePredictiveTimeline = async (scenario: any, timeHorizon: string) => {
+    const timeline = await geminiService.generatePredictiveTimeline(scenario, timeHorizon);
+    return timeline;
+  };
+
+  const generateEnsemblePrediction = async (models: string[], data: any) => {
+    const ensemble = await geminiService.generateEnsemblePrediction(models, data);
+    setCurrentResponse({
+      type: 'ensemble_prediction',
+      data: ensemble
+    });
+    return ensemble;
+  };
+
+  return { 
+    currentResponse, 
+    processNaturalLanguageQuery,
+    generateAutomatedReport,
+    generatePredictiveTimeline,
+    generateEnsemblePrediction
+  };
+};
+```
+
+### User Story 6: Mobile Experience
+
+**As a** field analyst  
+**I want to** access the platform on mobile devices with offline capabilities  
+**So that** I can use the system in areas with limited connectivity
+
+#### Implementation Details
+- **Progressive Web App**: Installable on mobile devices
+- **Offline Data**: Cache key data for offline access
+- **Push Notifications**: Critical alerts even when app is closed
+- **Mobile UI**: Touch-optimized interface and gestures
+- **Data Synchronization**: Automatic sync when connection is restored
+
+#### Technical Components
+```typescript
+// Mobile Features Hook
+const useMobileFeatures = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [offlineData, setOfflineData] = useState<OfflineData | null>(null);
+  
+  useEffect(() => {
+    window.addEventListener('online', () => {
+      setIsOnline(true);
+      syncOfflineData();
+    });
+    
+    window.addEventListener('offline', () => {
+      setIsOnline(false);
+      loadOfflineData();
+    });
+    
+    // Load offline data on mount
+    loadOfflineData();
+  }, []);
+
+  const downloadOfflineData = async () => {
+    // Cache key data for offline use
+    const dataToCache = {
+      lastSync: new Date().toISOString(),
+      cachedAssessments: [...],
+      cachedTutorials: [...],
+      userProgress: {...}
+    };
+    
+    localStorage.setItem('offlineData', JSON.stringify(dataToCache));
+    setOfflineData(dataToCache);
+    
+    // Cache key API endpoints and assets
+    if ('caches' in window) {
+      const cache = await caches.open('geopolitik-offline');
+      await cache.addAll([
+        '/',
+        '/dashboard',
+        '/tutorials',
+        '/risk-assessment',
+        '/crisis-monitoring'
+      ]);
+    }
+  };
+
+  return { 
+    isOnline, 
+    offlineData, 
+    downloadOfflineData,
+    syncOfflineData,
+    requestNotificationPermission,
+    installPWA
+  };
 };
 ```
 
@@ -758,6 +830,116 @@ self.addEventListener('push', (event) => {
     }
   ]
 }
+```
+
+---
+
+## Supabase Database Schema
+
+The application uses the following key tables in Supabase:
+
+### User Management
+```sql
+CREATE TABLE user_profiles (
+    id UUID REFERENCES auth.users PRIMARY KEY,
+    role TEXT NOT NULL DEFAULT 'student',
+    preferences JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Learning System
+```sql
+CREATE TABLE learning_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES user_profiles(id),
+    module_id TEXT NOT NULL,
+    completion_percentage INTEGER DEFAULT 0,
+    last_accessed TIMESTAMP DEFAULT NOW(),
+    performance_data JSONB DEFAULT '{}'
+);
+```
+
+### Risk Assessment
+```sql
+CREATE TABLE risk_assessments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    region TEXT NOT NULL,
+    risk_score INTEGER NOT NULL,
+    factors JSONB NOT NULL,
+    confidence_interval JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    expires_at TIMESTAMP NOT NULL
+);
+```
+
+### Crisis Monitoring
+```sql
+CREATE TABLE crisis_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    region TEXT NOT NULL,
+    severity TEXT NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+    category TEXT NOT NULL,
+    description TEXT NOT NULL,
+    confidence INTEGER NOT NULL,
+    escalation_probability INTEGER NOT NULL,
+    sources INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE alert_configurations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES user_profiles(id),
+    alert_type TEXT NOT NULL,
+    criteria JSONB NOT NULL,
+    notification_settings JSONB NOT NULL,
+    is_active BOOLEAN DEFAULT true
+);
+```
+
+### Scenario Simulation
+```sql
+CREATE TABLE scenario_simulations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES user_profiles(id),
+    scenario_config JSONB NOT NULL,
+    results JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Economic Modeling
+```sql
+CREATE TABLE economic_models (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    scenario_id TEXT NOT NULL,
+    model_type TEXT NOT NULL,
+    parameters JSONB NOT NULL,
+    results JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Advanced Analytics
+```sql
+CREATE TABLE nl_queries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES user_profiles(id),
+    query_text TEXT NOT NULL,
+    response_data JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE generated_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES user_profiles(id),
+    report_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
 ---

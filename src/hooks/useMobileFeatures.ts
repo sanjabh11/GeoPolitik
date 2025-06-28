@@ -14,6 +14,7 @@ export function useMobileFeatures() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   const { showToast } = useToast();
 
@@ -84,6 +85,7 @@ export function useMobileFeatures() {
 
   const syncOfflineData = async () => {
     try {
+      setLoading(true);
       // Simulate data sync
       const syncData = {
         lastSync: new Date().toISOString(),
@@ -108,6 +110,8 @@ export function useMobileFeatures() {
       }
     } catch (error) {
       showToast('error', 'Sync Failed', 'Unable to sync data');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -226,8 +230,6 @@ export function useMobileFeatures() {
       setLoading(false);
     }
   };
-
-  const [loading, setLoading] = useState(false);
 
   return {
     isOnline,

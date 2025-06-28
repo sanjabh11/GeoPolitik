@@ -17,135 +17,23 @@ import {
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { useToast } from '../hooks/useToast';
-
-interface OfflineData {
-  lastSync: string;
-  cachedAssessments: any[];
-  cachedTutorials: any[];
-  userProgress: any;
-}
+import { useMobileFeatures } from '../hooks/useMobileFeatures';
 
 export default function MobileOptimized() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [offlineData, setOfflineData] = useState<OfflineData | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
   
-  const { showToast } = useToast();
-
-  useEffect(() => {
-    // Online/offline detection
-    const handleOnline = () => {
-      setIsOnline(true);
-      showToast('success', 'Back Online', 'Syncing data...');
-      syncOfflineData();
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
-      showToast('warning', 'Offline Mode', 'Using cached data');
-      loadOfflineData();
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // PWA install prompt
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // Load offline data on mount
-    loadOfflineData();
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const loadOfflineData = () => {
-    try {
-      const cached = localStorage.getItem('offlineData');
-      if (cached) {
-        setOfflineData(JSON.parse(cached));
-      }
-    } catch (error) {
-      console.error('Failed to load offline data:', error);
-    }
-  };
-
-  const syncOfflineData = async () => {
-    try {
-      // Simulate data sync
-      const syncData = {
-        lastSync: new Date().toISOString(),
-        cachedAssessments: [],
-        cachedTutorials: [],
-        userProgress: {}
-      };
-      
-      localStorage.setItem('offlineData', JSON.stringify(syncData));
-      setOfflineData(syncData);
-      showToast('success', 'Sync Complete', 'All data updated');
-    } catch (error) {
-      showToast('error', 'Sync Failed', 'Unable to sync data');
-    }
-  };
-
-  const requestNotificationPermission = async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission();
-      setNotificationsEnabled(permission === 'granted');
-      
-      if (permission === 'granted') {
-        showToast('success', 'Notifications Enabled', 'You will receive push notifications');
-        
-        // Register service worker for push notifications
-        if ('serviceWorker' in navigator) {
-          try {
-            const registration = await navigator.serviceWorker.register('/sw.js');
-            console.log('Service Worker registered:', registration);
-          } catch (error) {
-            console.error('Service Worker registration failed:', error);
-          }
-        }
-      } else {
-        showToast('warning', 'Notifications Disabled', 'Enable in browser settings');
-      }
-    }
-  };
-
-  const installPWA = async () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      const { outcome } = await installPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        showToast('success', 'App Installed', 'GeoPolitik added to home screen');
-      }
-      
-      setInstallPrompt(null);
-    }
-  };
-
-  const downloadOfflineData = () => {
-    // Simulate downloading data for offline use
-    const dataToCache = {
-      tutorials: ['Nash Equilibrium', 'Game Theory Basics', 'Strategic Analysis'],
-      assessments: ['Eastern Europe Risk', 'Global Trade Analysis'],
-      userProgress: { score: 85, completedModules: 5 }
-    };
-    
-    localStorage.setItem('offlineCache', JSON.stringify(dataToCache));
-    showToast('success', 'Data Downloaded', 'Content available offline');
-  };
+  const {
+    isOnline,
+    offlineData,
+    notificationsEnabled,
+    installPrompt,
+    isInstalled,
+    loading,
+    syncOfflineData,
+    requestNotificationPermission,
+    installPWA,
+    downloadOfflineData
+  } = useMobileFeatures();
 
   const mobileNavItems = [
     { name: 'Dashboard', icon: Home, href: '/dashboard' },
@@ -205,7 +93,7 @@ export default function MobileOptimized() {
                 Mobile Features
               </h2>
               <div className="space-y-4">
-                {installPrompt && (
+                {installPrompt && !isInstalled && (
                   <div className="p-4 bg-primary-900/20 border border-primary-700/50 rounded-lg">
                     <h3 className="font-medium text-primary-300 mb-2">Install App</h3>
                     <p className="text-sm text-neutral-400 mb-3">
@@ -215,6 +103,15 @@ export default function MobileOptimized() {
                       <Download className="h-4 w-4 mr-2" />
                       Install App
                     </Button>
+                  </div>
+                )}
+
+                {isInstalled && (
+                  <div className="p-4 bg-success-900/20 border border-success-700/50 rounded-lg">
+                    <h3 className="font-medium text-success-300 mb-2">App Installed</h3>
+                    <p className="text-sm text-neutral-400">
+                      GeoPolitik is installed on your device
+                    </p>
                   </div>
                 )}
 
@@ -251,6 +148,7 @@ export default function MobileOptimized() {
                     variant="outline" 
                     size="sm" 
                     className="w-full"
+                    loading={loading}
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download for Offline
@@ -386,6 +284,16 @@ export default function MobileOptimized() {
                       </div>
                     </div>
                   )}
+
+                  <Button 
+                    onClick={syncOfflineData} 
+                    disabled={!isOnline || loading}
+                    loading={loading && isOnline}
+                    className="w-full"
+                  >
+                    <Wifi className="h-4 w-4 mr-2" />
+                    Sync Data
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -396,7 +304,7 @@ export default function MobileOptimized() {
                   <p className="text-neutral-500 mb-4">
                     Download content to use the app offline
                   </p>
-                  <Button onClick={downloadOfflineData}>
+                  <Button onClick={downloadOfflineData} loading={loading}>
                     <Download className="h-4 w-4 mr-2" />
                     Download Content
                   </Button>

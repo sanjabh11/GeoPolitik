@@ -18,8 +18,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { geminiService } from '../services/geminiService';
-import { useToast } from '../hooks/useToast';
+import { useEconomicModeling } from '../hooks/useEconomicModeling';
 
 interface EconomicScenario {
   id: string;
@@ -31,40 +30,6 @@ interface EconomicScenario {
     duration_months: number;
     intensity: 'low' | 'medium' | 'high';
     sectors: string[];
-  };
-}
-
-interface EconomicImpact {
-  gdpImpact: {
-    primary: { value: number; confidence: [number, number] };
-    secondary: { value: number; confidence: [number, number] };
-    total: { value: number; confidence: [number, number] };
-  };
-  tradeFlows: {
-    bilateral: { change: number; volume: number; sectors: string[] };
-    multilateral: { change: number; volume: number; affected_countries: number };
-  };
-  employmentEffects: {
-    manufacturing: { jobs: number; percentage: number };
-    services: { jobs: number; percentage: number };
-    agriculture: { jobs: number; percentage: number };
-    net: { jobs: number; percentage: number };
-  };
-  welfareImpact: {
-    consumer: { surplus: number; confidence: [number, number] };
-    producer: { surplus: number; confidence: [number, number] };
-    government: { revenue: number; expenditure: number };
-  };
-  fiscalImpact: {
-    revenue: { change: number; sources: string[] };
-    expenditure: { change: number; categories: string[] };
-    deficit: { change: number; sustainability: string };
-  };
-  timeline: {
-    immediate: string;
-    short_term: string;
-    medium_term: string;
-    long_term: string;
   };
 }
 
@@ -132,29 +97,21 @@ export default function EconomicModeling() {
       sectors: []
     }
   });
-  const [economicImpact, setEconomicImpact] = useState<EconomicImpact | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'predefined' | 'custom'>('predefined');
   
-  const { showToast } = useToast();
+  const {
+    loading,
+    error,
+    economicImpact,
+    analysisHistory,
+    generateEconomicAnalysis,
+    loadAnalysisHistory,
+    clearHistory
+  } = useEconomicModeling();
 
-  const runEconomicAnalysis = async (scenario: EconomicScenario) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const impact = await geminiService.generateEconomicImpactAnalysis(scenario);
-      setEconomicImpact(impact);
-      showToast('success', 'Economic Analysis Complete', 'Comprehensive impact assessment generated');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Analysis failed';
-      setError(errorMessage);
-      showToast('error', 'Analysis Failed', errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    loadAnalysisHistory();
+  }, []);
 
   const getImpactColor = (value: number) => {
     if (value > 0) return 'text-success-400';
@@ -331,7 +288,7 @@ export default function EconomicModeling() {
                     Selected: <span className="text-neutral-200">{selectedScenario.name}</span>
                   </div>
                   <Button
-                    onClick={() => runEconomicAnalysis(selectedScenario)}
+                    onClick={() => generateEconomicAnalysis(selectedScenario)}
                     loading={loading}
                     className="w-full"
                   >
