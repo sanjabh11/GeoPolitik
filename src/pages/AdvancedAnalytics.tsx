@@ -1,19 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Brain, 
-  MessageSquare, 
-  FileText, 
-  Timeline,
-  BarChart3,
-  TrendingUp,
-  Search,
-  Download,
-  Zap,
-  Target,
-  Globe,
-  AlertCircle
-} from 'lucide-react';
+import { Brain, MessageSquare, FileText, Baseline as Timeline, BarChart3, TrendingUp, Search, Download, Zap, Target, Globe, AlertCircle } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
