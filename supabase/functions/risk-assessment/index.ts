@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || ""
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent"
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 const NEWS_API_KEY = Deno.env.get("NEWS_API_KEY") || ""
 
 interface RiskAssessmentRequest {
@@ -66,7 +66,7 @@ serve(async (req) => {
     // Fetch latest news data
     const newsData = await fetchLatestNews(regions)
     
-    // Generate risk assessment with Gemini
+    // Generate risk assessment with Gemini 2.5 Flash
     const geminiPrompt = `
       You are an Elite Geopolitical Risk Assessment AI. Analyze current risk for regions: ${regions.join(", ")}.
       Consider factors: ${factors.join(", ") || "all relevant factors"}.
@@ -109,7 +109,7 @@ serve(async (req) => {
           temperature: 0.3,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
         }
       })
     })

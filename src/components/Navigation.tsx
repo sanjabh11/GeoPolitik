@@ -13,7 +13,10 @@ import {
   Brain,
   Globe,
   LogIn,
-  LogOut
+  LogOut,
+  DollarSign,
+  BarChart3,
+  Smartphone
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from './AuthProvider';
@@ -26,6 +29,9 @@ const navigationItems = [
   { name: 'Risk Assessment', href: '/risk-assessment', icon: TrendingUp },
   { name: 'Simulation', href: '/simulation', icon: Target },
   { name: 'Crisis Monitoring', href: '/crisis-monitoring', icon: AlertTriangle },
+  { name: 'Economic Modeling', href: '/economic-modeling', icon: DollarSign },
+  { name: 'Advanced Analytics', href: '/advanced-analytics', icon: BarChart3 },
+  { name: 'Mobile Experience', href: '/mobile', icon: Smartphone },
   { name: 'Profile', href: '/profile', icon: User }
 ];
 
@@ -79,7 +85,7 @@ export function Navigation({ onAuthClick }: NavigationProps) {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
@@ -89,14 +95,14 @@ export function Navigation({ onAuthClick }: NavigationProps) {
                   key={item.name}
                   to={item.href}
                   className={clsx(
-                    'flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative group',
+                    'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative group',
                     isActive
                       ? 'text-primary-300 bg-primary-900/30'
                       : 'text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800/50'
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  <span>{item.name}</span>
+                  <span className="hidden xl:inline">{item.name}</span>
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
@@ -128,7 +134,7 @@ export function Navigation({ onAuthClick }: NavigationProps) {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800/50 transition-colors duration-200"
+            className="lg:hidden p-2 rounded-lg text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800/50 transition-colors duration-200"
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -143,9 +149,9 @@ export function Navigation({ onAuthClick }: NavigationProps) {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden bg-neutral-900/95 backdrop-blur-lg border-t border-neutral-800"
+            className="lg:hidden bg-neutral-900/95 backdrop-blur-lg border-t border-neutral-800"
           >
-            <div className="px-4 pt-2 pb-4 space-y-1">
+            <div className="px-4 pt-2 pb-4 space-y-1 max-h-96 overflow-y-auto">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;

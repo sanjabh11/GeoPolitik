@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || ""
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent"
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 interface TutorialRequest {
   level: 'basic' | 'intermediate' | 'advanced'
@@ -64,7 +64,7 @@ serve(async (req) => {
       }
     }
     
-    // Generate personalized tutorial with Gemini
+    // Generate personalized tutorial with Gemini 2.5 Flash
     const geminiResponse = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
@@ -104,7 +104,7 @@ serve(async (req) => {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
         }
       })
     })

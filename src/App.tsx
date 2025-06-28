@@ -15,6 +15,9 @@ const RiskAssessment = React.lazy(() => import('./pages/RiskAssessment'));
 const ScenarioSimulation = React.lazy(() => import('./pages/ScenarioSimulation'));
 const CrisisMonitoring = React.lazy(() => import('./pages/CrisisMonitoring'));
 const Profile = React.lazy(() => import('./pages/Profile'));
+const EconomicModeling = React.lazy(() => import('./pages/EconomicModeling'));
+const AdvancedAnalytics = React.lazy(() => import('./pages/AdvancedAnalytics'));
+const MobileOptimized = React.lazy(() => import('./pages/MobileOptimized'));
 
 function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -36,6 +39,9 @@ function App() {
                 <Route path="/simulation" element={<ScenarioSimulation />} />
                 <Route path="/crisis-monitoring" element={<CrisisMonitoring />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/economic-modeling" element={<EconomicModeling />} />
+                <Route path="/advanced-analytics" element={<AdvancedAnalytics />} />
+                <Route path="/mobile" element={<MobileOptimized />} />
               </Routes>
             </Suspense>
             
