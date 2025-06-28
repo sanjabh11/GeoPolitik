@@ -4,11 +4,13 @@
 
 GeoPolitik is an advanced AI-powered platform that combines interactive game theory education with real-time geopolitical risk assessment and strategic analysis. Built with cutting-edge technology, it serves students, researchers, policymakers, and analysts who need to understand and forecast international relations through mathematical modeling and AI-driven insights.
 
+![GeoPolitik Platform](https://images.pexels.com/photos/7412095/pexels-photo-7412095.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1)
+
 ## 🚀 Key Features
 
 ### 1. **AI-Powered Game Theory Tutorials**
 - Interactive learning modules from beginner to advanced levels
-- Real-time AI-generated content using Google Gemini 2.5 Pro
+- Real-time AI-generated content using Google Gemini 2.5 Flash
 - Geopolitical examples and scenarios
 - Adaptive learning with progress tracking
 - Nash equilibrium calculators and game trees
@@ -34,12 +36,40 @@ GeoPolitik is an advanced AI-powered platform that combines interactive game the
 - Escalation probability assessment
 - Browser notifications and real-time updates
 
-### 5. **Comprehensive Analytics Dashboard**
-- Real-time metrics and KPIs
-- Interactive data visualizations
-- Progress tracking and achievement system
-- Export capabilities for reports
-- Historical pattern analysis
+### 5. **Advanced Economic Modeling**
+- GDP impact calculations with confidence intervals
+- Trade flow analysis with bilateral and multilateral metrics
+- Employment effects modeling by sector
+- Welfare impact assessments
+- Fiscal implications analysis
+
+### 6. **Mobile Application Features**
+- Progressive Web App (PWA) capabilities
+- Offline data access and synchronization
+- Push notifications for critical alerts
+- Mobile-optimized UI with touch-friendly interfaces
+- Installable app experience
+
+### 7. **Enterprise Features**
+- Single Sign-On (SSO) integration
+- Advanced analytics dashboard
+- Custom branding options
+- API marketplace for third-party integrations
+- White-label solutions
+
+### 8. **Collaborative Workspace**
+- Document sharing and editing
+- Real-time commenting and discussions
+- Version control for analyses
+- Team management with permissions
+- Document locking and access controls
+
+### 9. **Advanced AI Features**
+- Natural language querying for insights
+- Automated report generation
+- Predictive timeline analysis
+- Ensemble prediction methods
+- Custom model training capabilities
 
 ## 🛠 Technology Stack
 
@@ -53,7 +83,7 @@ GeoPolitik is an advanced AI-powered platform that combines interactive game the
 - **React Query** for data fetching and caching
 
 ### Backend & AI
-- **Google Gemini 2.5 Pro API** for AI-powered analysis
+- **Google Gemini 2.5 Flash API** for AI-powered analysis
 - **Supabase** for database and real-time features
 - **News API** for real-time news data
 - **World Bank API** for economic indicators
@@ -105,7 +135,7 @@ VITE_ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key
 
 4. **Supabase Setup**
 - Create a new Supabase project
-- Run the database migrations from `supabase/migrations/create_initial_schema.sql`
+- Run the database migrations from `supabase/migrations/`
 - Deploy the edge functions in `supabase/functions/`
 
 5. **Start Development Server**
@@ -133,13 +163,22 @@ npm run preview
 1. **Risk Assessment**: Configure regions and factors for analysis
 2. **Real-time Monitoring**: Set up crisis monitoring with custom alerts
 3. **Scenario Planning**: Run strategic simulations with multiple actors
-4. **Export Reports**: Generate comprehensive analysis reports
+4. **Economic Modeling**: Analyze comprehensive economic impacts
+5. **Export Reports**: Generate comprehensive analysis reports
 
 ### For Researchers
 1. **Historical Analysis**: Access pattern recognition and trend analysis
 2. **Model Validation**: Use backtesting features for model verification
 3. **Collaborative Tools**: Share analyses and collaborate on research
 4. **API Integration**: Integrate with existing research workflows
+5. **Custom Models**: Train specialized AI models on your data
+
+### For Enterprise Users
+1. **Team Management**: Set up user roles and permissions
+2. **Custom Branding**: Apply your organization's visual identity
+3. **SSO Integration**: Connect with your identity provider
+4. **API Access**: Integrate with your existing systems
+5. **Advanced Analytics**: Track usage and performance metrics
 
 ## 🔧 Configuration
 
@@ -206,6 +245,7 @@ npm run type-check    # Run TypeScript checks
 - **Caching Strategy**: Multi-level caching (browser, React Query, Supabase)
 - **AI Response Caching**: Intelligent caching of AI-generated content
 - **Image Optimization**: Optimized assets and lazy loading
+- **PWA Support**: Service worker for offline capabilities
 
 ## 🔒 Security
 
@@ -242,6 +282,21 @@ const riskAssessment = await geminiService.generateRiskAssessment(
   ['Eastern Europe', 'South China Sea'],
   ['Military Tensions', 'Economic Instability']
 );
+
+// Run economic impact analysis
+const economicImpact = await geminiService.generateEconomicImpactAnalysis({
+  name: 'US-China Trade War',
+  type: 'trade_war',
+  parameters: {
+    affected_countries: ['US', 'China', 'Global'],
+    duration_months: 24
+  }
+});
+
+// Process natural language query
+const insights = await geminiService.processNaturalLanguageQuery(
+  "What would happen if oil prices doubled?"
+);
 ```
 
 ### Data Services
@@ -261,11 +316,11 @@ const economics = await dataService.fetchEconomicIndicators(
 ## 📈 Roadmap
 
 ### Upcoming Features
-- **Multi-language Support**: Internationalization for global users
-- **Advanced Visualizations**: 3D network graphs and interactive maps
-- **Mobile App**: React Native mobile application
-- **API Marketplace**: Third-party integrations and plugins
-- **Enterprise Features**: SSO, advanced analytics, custom branding
+- **Expanded Model Training**: More advanced custom model capabilities
+- **VR/AR Visualization**: Immersive data visualization experiences
+- **Blockchain Integration**: Decentralized prediction markets
+- **Quantum Computing**: Advanced simulation capabilities for complex scenarios
+- **Regulatory Compliance**: Government and enterprise certifications
 
 ---
 

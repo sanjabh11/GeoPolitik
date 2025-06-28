@@ -38,6 +38,7 @@ graph TB
     C --> M[Risk Assessment]
     C --> N[Crisis Detection]
     C --> O[Scenario Simulation]
+    C --> P[Economic Modeling]
 ```
 
 ### Database Schema
@@ -107,16 +108,6 @@ CREATE TABLE alert_configurations (
     is_active BOOLEAN DEFAULT true
 );
 
--- Historical Analysis
-CREATE TABLE historical_patterns (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pattern_type TEXT NOT NULL,
-    description TEXT NOT NULL,
-    examples JSONB NOT NULL,
-    statistical_significance FLOAT,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
 -- Economic Modeling
 CREATE TABLE economic_models (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -127,25 +118,31 @@ CREATE TABLE economic_models (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Social Media Sentiment
-CREATE TABLE sentiment_data (
+-- Collaborative Workspace
+CREATE TABLE documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    platform TEXT NOT NULL,
-    region TEXT NOT NULL,
-    sentiment_score FLOAT NOT NULL,
-    volume INTEGER NOT NULL,
-    topics JSONB NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    owner_id UUID REFERENCES auth.users(id),
+    shared_with JSONB DEFAULT '[]',
+    version INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Model Performance Tracking
-CREATE TABLE model_performance (
+-- Custom Model Training
+CREATE TABLE custom_models (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    model_name TEXT NOT NULL,
-    test_period DATERANGE NOT NULL,
-    accuracy_metrics JSONB NOT NULL,
-    backtesting_results JSONB NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    user_id UUID REFERENCES auth.users(id),
+    name TEXT NOT NULL,
+    description TEXT,
+    model_type TEXT NOT NULL,
+    parameters JSONB NOT NULL,
+    dataset_id UUID,
+    status TEXT DEFAULT 'draft',
+    metrics JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
 
@@ -156,6 +153,8 @@ ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scenario_simulations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE alert_configurations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE custom_models ENABLE ROW LEVEL SECURITY;
 
 -- User can only access their own data
 CREATE POLICY "Users can read own profile" ON user_profiles
@@ -189,7 +188,7 @@ CREATE POLICY "Public read access" ON crisis_events
 **So that** I can understand strategic decision-making in geopolitics
 
 #### Implementation Details
-- **AI Integration**: Gemini 2.5 Pro generates personalized tutorials
+- **AI Integration**: Gemini 2.5 Flash generates personalized tutorials
 - **Adaptive Learning**: Progress tracking with difficulty adjustment
 - **Interactive Elements**: Game trees, payoff matrices, scenario analysis
 - **Real-time Feedback**: Immediate assessment and guidance
@@ -255,46 +254,36 @@ const useRiskAssessment = () => {
 };
 ```
 
-### User Story 3: Strategic Scenario Simulation
+### User Story 3: Advanced Economic Modeling
 
-**As a** military strategist  
-**I want to** simulate complex multi-party geopolitical scenarios with AI  
-**So that** I can evaluate different strategic options and their outcomes
+**As an** economic analyst  
+**I want to** model the economic impact of geopolitical scenarios  
+**So that** I can forecast GDP effects, trade flows, and employment impacts
 
 #### Implementation Details
-- **Multi-Actor Modeling**: Configurable actors with capabilities
-- **Game-Theoretic Analysis**: Nash equilibrium calculation
-- **Monte Carlo Simulation**: 1000+ iterations for robust results
-- **AI Recommendations**: Strategic insights from Gemini
+- **GDP Impact Analysis**: Primary, secondary, and total effects with confidence intervals
+- **Trade Flow Analysis**: Bilateral and multilateral trade volume changes
+- **Employment Effects**: Sector-specific job impact modeling
+- **Welfare Impact**: Consumer/producer surplus and government fiscal analysis
+- **Timeline Analysis**: Short, medium, and long-term projections
 
 #### Technical Components
 ```typescript
-// Scenario Simulation Hook
-const useScenarioSimulation = () => {
-  const [currentSimulation, setCurrentSimulation] = useState<SimulationResults | null>(null);
+// Economic Modeling Service
+const useEconomicModeling = () => {
+  const [economicImpact, setEconomicImpact] = useState<EconomicImpact | null>(null);
   
-  const runSimulation = async (config: ScenarioConfig): Promise<SimulationResults> => {
-    // AI-powered simulation
-    const results = await geminiService.runScenarioSimulation(config);
+  const generateEconomicAnalysis = async (scenario: EconomicScenario) => {
+    // AI-powered economic analysis
+    const impact = await geminiService.generateEconomicImpactAnalysis(scenario);
     
-    // Enhanced analysis
-    const enhancedResults = {
-      ...results,
-      detailedAnalysis: {
-        strategyMatrix: generateStrategyMatrix(config.actors),
-        equilibriumProbabilities: generateEquilibriumProbabilities(config.actors.length),
-        sensitivityAnalysis: generateSensitivityAnalysis(config)
-      }
-    };
+    // Save results
+    await dataService.saveEconomicModel(scenario.id, impact);
     
-    // Save to database
-    const simulationId = await dataService.saveScenarioSimulation(userId, config, enhancedResults);
-    setCurrentSimulation(enhancedResults);
-    
-    return enhancedResults;
+    setEconomicImpact(impact);
   };
 
-  return { currentSimulation, runSimulation };
+  return { economicImpact, generateEconomicAnalysis };
 };
 ```
 
@@ -365,17 +354,69 @@ const useCrisisMonitoring = () => {
 };
 ```
 
+### User Story 5: Collaborative Workspace
+
+**As a** research team lead  
+**I want to** collaborate with team members on analyses  
+**So that** we can produce comprehensive strategic assessments
+
+#### Implementation Details
+- **Document Sharing**: Real-time collaborative document editing
+- **Version Control**: Track changes and document history
+- **Comments and Discussions**: In-document commenting system
+- **Access Control**: Permissions and document locking
+- **Team Management**: User roles and organizational structure
+
+#### Technical Components
+```typescript
+// Collaborative Document Service
+const useCollaborativeWorkspace = () => {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  
+  const loadDocuments = async () => {
+    const { data } = await supabase
+      .from('documents')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    
+    setDocuments(data || []);
+  };
+  
+  const saveDocument = async (document: Document) => {
+    const { data } = await supabase
+      .from('documents')
+      .upsert({
+        id: document.id,
+        title: document.title,
+        content: document.content,
+        owner_id: document.owner_id,
+        shared_with: document.shared_with,
+        version: document.version + 1,
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    setSelectedDocument(data);
+    await loadDocuments();
+  };
+
+  return { documents, selectedDocument, loadDocuments, saveDocument };
+};
+```
+
 ---
 
 ## AI Integration Architecture
 
-### Gemini 2.5 Pro Integration
+### Gemini 2.5 Flash Integration
 
 #### Service Architecture
 ```typescript
 class GeminiService {
   private apiKey: string;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
   async generateContent(prompt: string, config?: GenerationConfig): Promise<string> {
     const request = {
@@ -384,7 +425,7 @@ class GeminiService {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
         ...config
       }
     };
@@ -410,13 +451,13 @@ class GeminiService {
     return this.generateContent(prompt, { temperature: 0.3 });
   }
 
-  async runScenarioSimulation(config: any) {
-    const prompt = `Simulate strategic scenario with game theory...`;
-    return this.generateContent(prompt, { temperature: 0.2 });
+  async generateEconomicImpactAnalysis(scenario: any) {
+    const prompt = `Analyze economic impacts of: ${JSON.stringify(scenario)}...`;
+    return this.generateContent(prompt, { temperature: 0.1 });
   }
 
-  async analyzeCrisisEvents(newsData: any[]) {
-    const prompt = `Analyze news events for crisis potential...`;
+  async processNaturalLanguageQuery(query: string) {
+    const prompt = `Analyze this geopolitical query: "${query}"...`;
     return this.generateContent(prompt, { temperature: 0.4 });
   }
 }
@@ -454,42 +495,56 @@ OUTPUT FORMAT:
     "correctAnswer": number
   }
 }
-
-EXAMPLES TO USE:
-- NATO expansion decisions (coordination games)
-- Nuclear deterrence (chicken game)
-- Trade agreement negotiations (bargaining games)
-- Alliance formation (coalition games)
 ```
 
-**Risk Assessment Prompt Template:**
+**Economic Impact Analysis Prompt Template:**
 ```
-You are an Elite Geopolitical Risk Assessment AI with access to real-time global intelligence.
+You are an Advanced Economic Impact Modeling AI.
 
 ANALYSIS FRAMEWORK:
-- Apply PMESII-PT analysis (Political, Military, Economic, Social, Information, Infrastructure, Physical Environment, Time)
-- Generate risk probability matrices with confidence intervals
-- Identify leading and lagging indicators
+- Provide GDP impact with confidence intervals (primary, secondary, total effects)
+- Calculate trade flow changes (bilateral, multilateral with volume data)
+- Model employment effects by sector (manufacturing, services, agriculture)
+- Assess welfare calculations (consumer surplus, producer surplus, government)
+- Analyze fiscal implications (revenue, expenditure, deficit impact)
+- Project timeline analysis (immediate, short-term, medium-term, long-term)
 
 INPUT DATA:
-- Regions: {regions}
-- Factors: {factors}
-- News Data: {newsData}
-- Economic Data: {economicData}
+- Scenario: {scenario}
 
 OUTPUT REQUIREMENTS:
 {
-  "assessments": [{
-    "region": "string",
-    "riskScore": number,
-    "confidenceInterval": [number, number],
-    "primaryDrivers": [{"factor": "string", "weight": number, "trend": "increasing|stable|decreasing"}],
-    "scenarios": {
-      "best": {"probability": number, "description": "string"},
-      "worst": {"probability": number, "description": "string"},
-      "mostLikely": {"probability": number, "description": "string"}
-    }
-  }]
+  "gdpImpact": {
+    "primary": { "value": number, "confidence": [number, number] },
+    "secondary": { "value": number, "confidence": [number, number] },
+    "total": { "value": number, "confidence": [number, number] }
+  },
+  "tradeFlows": {
+    "bilateral": { "change": number, "volume": number, "sectors": ["string"] },
+    "multilateral": { "change": number, "volume": number, "affected_countries": number }
+  },
+  "employmentEffects": {
+    "manufacturing": { "jobs": number, "percentage": number },
+    "services": { "jobs": number, "percentage": number },
+    "agriculture": { "jobs": number, "percentage": number },
+    "net": { "jobs": number, "percentage": number }
+  },
+  "welfareImpact": {
+    "consumer": { "surplus": number, "confidence": [number, number] },
+    "producer": { "surplus": number, "confidence": [number, number] },
+    "government": { "revenue": number, "expenditure": number }
+  },
+  "fiscalImpact": {
+    "revenue": { "change": number, "sources": ["string"] },
+    "expenditure": { "change": number, "categories": ["string"] },
+    "deficit": { "change": number, "sustainability": "string" }
+  },
+  "timeline": {
+    "immediate": "string",
+    "short_term": "string",
+    "medium_term": "string",
+    "long_term": "string"
+  }
 }
 ```
 
@@ -598,598 +653,146 @@ class RealTimeService {
 
 ---
 
-## Performance & Scalability
+## Mobile & PWA Implementation
 
-### Caching Strategy
+### Service Worker
+```javascript
+// Service Worker for GeoPolitik PWA
+const CACHE_NAME = 'geopolitik-v1';
+const urlsToCache = [
+  '/',
+  '/static/js/bundle.js',
+  '/static/css/main.css',
+  '/manifest.json'
+];
 
-#### Multi-Level Caching
-```typescript
-class CacheService {
-  // Level 1: Browser Memory Cache
-  private memoryCache = new Map<string, { data: any; expires: number }>();
+// Install event
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
 
-  // Level 2: Browser Local Storage
-  private localStorage = window.localStorage;
+// Fetch event
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Return cached version or fetch from network
+        return response || fetch(event.request);
+      })
+  );
+});
 
-  // Level 3: Supabase Database Cache
-  private supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  async get<T>(key: string): Promise<T | null> {
-    // Check memory cache first
-    const memoryData = this.memoryCache.get(key);
-    if (memoryData && memoryData.expires > Date.now()) {
-      return memoryData.data;
-    }
-
-    // Check local storage
-    const localData = this.localStorage.getItem(key);
-    if (localData) {
-      const parsed = JSON.parse(localData);
-      if (parsed.expires > Date.now()) {
-        // Restore to memory cache
-        this.memoryCache.set(key, parsed);
-        return parsed.data;
+// Push notification event
+self.addEventListener('push', (event) => {
+  const options = {
+    body: event.data ? event.data.text() : 'New geopolitical alert',
+    icon: '/icon-192x192.png',
+    badge: '/badge-72x72.png',
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: 1
+    },
+    actions: [
+      {
+        action: 'explore',
+        title: 'View Details',
+        icon: '/icon-explore.png'
+      },
+      {
+        action: 'close',
+        title: 'Close',
+        icon: '/icon-close.png'
       }
-    }
+    ]
+  };
 
-    // Check database cache
-    const { data } = await this.supabase
-      .from('cache_entries')
-      .select('data, expires_at')
-      .eq('key', key)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    if (data) {
-      const cacheEntry = { data: data.data, expires: new Date(data.expires_at).getTime() };
-      this.memoryCache.set(key, cacheEntry);
-      this.localStorage.setItem(key, JSON.stringify(cacheEntry));
-      return data.data;
-    }
-
-    return null;
-  }
-
-  async set<T>(key: string, data: T, ttlSeconds: number): Promise<void> {
-    const expires = Date.now() + (ttlSeconds * 1000);
-    const cacheEntry = { data, expires };
-
-    // Set in all cache levels
-    this.memoryCache.set(key, cacheEntry);
-    this.localStorage.setItem(key, JSON.stringify(cacheEntry));
-
-    await this.supabase
-      .from('cache_entries')
-      .upsert({
-        key,
-        data,
-        expires_at: new Date(expires).toISOString()
-      });
-  }
-}
-```
-
-### Performance Monitoring
-
-#### Metrics Collection
-```typescript
-class PerformanceMonitor {
-  private metrics: PerformanceMetric[] = [];
-
-  trackAPICall(endpoint: string, duration: number, success: boolean) {
-    this.metrics.push({
-      type: 'api_call',
-      endpoint,
-      duration,
-      success,
-      timestamp: Date.now()
-    });
-
-    // Send to analytics if batch size reached
-    if (this.metrics.length >= 100) {
-      this.sendMetrics();
-    }
-  }
-
-  trackAIResponse(model: string, promptLength: number, responseTime: number) {
-    this.metrics.push({
-      type: 'ai_response',
-      model,
-      promptLength,
-      responseTime,
-      timestamp: Date.now()
-    });
-  }
-
-  trackUserInteraction(action: string, component: string, duration?: number) {
-    this.metrics.push({
-      type: 'user_interaction',
-      action,
-      component,
-      duration,
-      timestamp: Date.now()
-    });
-  }
-
-  private async sendMetrics() {
-    try {
-      await fetch('/api/metrics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(this.metrics)
-      });
-      this.metrics = [];
-    } catch (error) {
-      console.error('Failed to send metrics:', error);
-    }
-  }
-}
-```
-
----
-
-## Security & Privacy
-
-### Data Protection Strategy
-
-#### API Key Management
-```typescript
-class SecurityService {
-  private encryptionKey: string;
-
-  constructor() {
-    this.encryptionKey = this.generateEncryptionKey();
-  }
-
-  encryptAPIKey(apiKey: string): string {
-    // Use Web Crypto API for encryption
-    return this.encrypt(apiKey, this.encryptionKey);
-  }
-
-  decryptAPIKey(encryptedKey: string): string {
-    return this.decrypt(encryptedKey, this.encryptionKey);
-  }
-
-  private generateEncryptionKey(): string {
-    // Generate key from user session and device fingerprint
-    const sessionId = this.getSessionId();
-    const deviceFingerprint = this.getDeviceFingerprint();
-    return this.hash(sessionId + deviceFingerprint);
-  }
-
-  validateRequest(request: any): boolean {
-    // Implement request validation logic
-    return this.checkRateLimit(request) && 
-           this.validateOrigin(request) && 
-           this.checkAuthentication(request);
-  }
-}
-```
-
-#### Privacy Controls
-```typescript
-class PrivacyManager {
-  private userConsent: Map<string, boolean> = new Map();
-
-  async requestConsent(userId: string, dataType: string): Promise<boolean> {
-    const consent = await this.showConsentDialog(dataType);
-    this.userConsent.set(`${userId}_${dataType}`, consent);
-    
-    // Store consent in database
-    await this.supabase
-      .from('user_consent')
-      .upsert({
-        user_id: userId,
-        data_type: dataType,
-        consent_given: consent,
-        timestamp: new Date().toISOString()
-      });
-
-    return consent;
-  }
-
-  hasConsent(userId: string, dataType: string): boolean {
-    return this.userConsent.get(`${userId}_${dataType}`) || false;
-  }
-
-  async deleteUserData(userId: string): Promise<void> {
-    // Delete from all tables
-    const tables = [
-      'learning_progress',
-      'scenario_simulations', 
-      'alert_configurations',
-      'user_profiles'
-    ];
-
-    for (const table of tables) {
-      await this.supabase
-        .from(table)
-        .delete()
-        .eq('user_id', userId);
-    }
-
-    // Clear local storage
-    this.clearLocalData(userId);
-  }
-}
-```
-
----
-
-## Testing Strategy
-
-### Comprehensive Testing Framework
-
-#### Unit Tests
-```typescript
-// Game Theory Hook Tests
-describe('useGameTheory', () => {
-  test('should generate tutorial content', async () => {
-    const { result } = renderHook(() => useGameTheory());
-    
-    await act(async () => {
-      await result.current.generateTutorial('beginner', 'Nash Equilibrium');
-    });
-
-    expect(result.current.currentTutorial).toBeDefined();
-    expect(result.current.currentTutorial.concept).toBe('Nash Equilibrium');
-  });
-
-  test('should track user progress', async () => {
-    const { result } = renderHook(() => useGameTheory());
-    
-    await act(async () => {
-      const isCorrect = await result.current.submitAnswer('test-question', 1);
-      expect(isCorrect).toBe(true);
-    });
-
-    expect(result.current.userProgress.currentScore).toBeGreaterThan(0);
-  });
-});
-
-// Risk Assessment Tests
-describe('useRiskAssessment', () => {
-  test('should generate risk assessments', async () => {
-    const { result } = renderHook(() => useRiskAssessment());
-    
-    await act(async () => {
-      await result.current.generateRiskAssessment(['Eastern Europe'], ['Military Tensions']);
-    });
-
-    expect(result.current.assessments).toHaveLength(1);
-    expect(result.current.assessments[0].region).toBe('Eastern Europe');
-  });
+  event.waitUntil(
+    self.registration.showNotification('GeoPolitik Alert', options)
+  );
 });
 ```
 
-#### Integration Tests
-```typescript
-// API Integration Tests
-describe('Gemini Service Integration', () => {
-  test('should generate game theory tutorial', async () => {
-    const tutorial = await geminiService.generateGameTheoryTutorial(
-      'intermediate',
-      'Prisoner\'s Dilemma',
-      { completedModules: [], currentScore: 0 }
-    );
-
-    expect(tutorial.concept).toBeDefined();
-    expect(tutorial.explanation).toBeDefined();
-    expect(tutorial.geopoliticalExample).toBeDefined();
-    expect(tutorial.assessmentQuestion).toBeDefined();
-  });
-
-  test('should handle API errors gracefully', async () => {
-    // Mock API failure
-    jest.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('API Error'));
-
-    const tutorial = await geminiService.generateGameTheoryTutorial('beginner', 'test');
-    
-    // Should return mock response on error
-    expect(tutorial).toBeDefined();
-    expect(typeof tutorial).toBe('object');
-  });
-});
-```
-
-#### End-to-End Tests
-```typescript
-// E2E Test Suite
-describe('Complete User Journey', () => {
-  test('student learning flow', async () => {
-    // Navigate to tutorials
-    await page.goto('/tutorials');
-    
-    // Select a module
-    await page.click('[data-testid="module-nash-equilibrium"]');
-    
-    // Wait for AI content generation
-    await page.waitForSelector('[data-testid="tutorial-content"]');
-    
-    // Answer assessment question
-    await page.click('[data-testid="answer-option-1"]');
-    await page.click('[data-testid="submit-answer"]');
-    
-    // Verify progress update
-    const score = await page.textContent('[data-testid="user-score"]');
-    expect(parseInt(score)).toBeGreaterThan(0);
-  });
-
-  test('risk assessment workflow', async () => {
-    await page.goto('/risk-assessment');
-    
-    // Configure regions
-    await page.check('[data-testid="region-eastern-europe"]');
-    await page.check('[data-testid="factor-military-tensions"]');
-    
-    // Generate assessment
-    await page.click('[data-testid="generate-assessment"]');
-    
-    // Wait for AI analysis
-    await page.waitForSelector('[data-testid="risk-score"]');
-    
-    // Verify results
-    const riskScore = await page.textContent('[data-testid="risk-score"]');
-    expect(parseInt(riskScore)).toBeGreaterThanOrEqual(0);
-    expect(parseInt(riskScore)).toBeLessThanOrEqual(100);
-  });
-});
-```
-
----
-
-## Deployment & DevOps
-
-### CI/CD Pipeline
-
-#### GitHub Actions Workflow
-```yaml
-name: Deploy GeoPolitik
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run type-check
-      - run: npm run test
-      - run: npm run test:e2e
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - run: npm ci
-      - run: npm run build
-      
-      - uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: dist/
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: dist
-          path: dist/
-      
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v2.0
-        with:
-          publish-dir: './dist'
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions"
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-```
-
-### Environment Configuration
-
-#### Production Environment Variables
-```bash
-# Core Configuration
-VITE_APP_ENV=production
-VITE_APP_VERSION=1.0.0
-
-# AI Services
-VITE_GEMINI_API_KEY=your_production_gemini_key
-VITE_GEMINI_MODEL=gemini-2.5-pro
-
-# Database
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_production_anon_key
-
-# External APIs
-VITE_NEWS_API_KEY=your_production_news_key
-VITE_WORLD_BANK_API_KEY=your_world_bank_key
-VITE_ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key
-
-# Analytics
-VITE_ANALYTICS_ID=your_analytics_id
-VITE_SENTRY_DSN=your_sentry_dsn
-
-# Feature Flags
-VITE_ENABLE_REAL_TIME_MONITORING=true
-VITE_ENABLE_ADVANCED_ANALYTICS=true
-VITE_ENABLE_COLLABORATION_FEATURES=false
-```
-
----
-
-## Monitoring & Analytics
-
-### Application Monitoring
-
-#### Performance Metrics
-```typescript
-class ApplicationMonitor {
-  private analytics: Analytics;
-  private errorReporting: ErrorReporting;
-
-  constructor() {
-    this.analytics = new Analytics(ANALYTICS_ID);
-    this.errorReporting = new ErrorReporting(SENTRY_DSN);
-  }
-
-  trackPageView(page: string, userId?: string) {
-    this.analytics.track('page_view', {
-      page,
-      userId,
-      timestamp: Date.now(),
-      userAgent: navigator.userAgent
-    });
-  }
-
-  trackAIInteraction(type: string, duration: number, success: boolean) {
-    this.analytics.track('ai_interaction', {
-      type,
-      duration,
-      success,
-      timestamp: Date.now()
-    });
-  }
-
-  trackError(error: Error, context?: any) {
-    this.errorReporting.captureException(error, {
-      tags: { component: context?.component },
-      extra: context
-    });
-  }
-
-  trackPerformance(metric: string, value: number) {
-    this.analytics.track('performance_metric', {
-      metric,
-      value,
-      timestamp: Date.now()
-    });
-  }
-}
-```
-
-#### Health Checks
-```typescript
-class HealthCheckService {
-  async checkSystemHealth(): Promise<HealthStatus> {
-    const checks = await Promise.allSettled([
-      this.checkDatabaseConnection(),
-      this.checkGeminiAPI(),
-      this.checkExternalAPIs(),
-      this.checkCacheSystem()
-    ]);
-
-    return {
-      overall: checks.every(check => check.status === 'fulfilled') ? 'healthy' : 'degraded',
-      database: checks[0].status === 'fulfilled' ? 'healthy' : 'unhealthy',
-      ai_service: checks[1].status === 'fulfilled' ? 'healthy' : 'unhealthy',
-      external_apis: checks[2].status === 'fulfilled' ? 'healthy' : 'unhealthy',
-      cache_system: checks[3].status === 'fulfilled' ? 'healthy' : 'unhealthy',
-      timestamp: new Date().toISOString()
-    };
-  }
-
-  private async checkDatabaseConnection(): Promise<boolean> {
-    try {
-      const { data, error } = await supabase.from('health_check').select('id').limit(1);
-      return !error;
-    } catch {
-      return false;
+### Web App Manifest
+```json
+{
+  "name": "GeoPolitik - Game Theory Geopolitical Platform",
+  "short_name": "GeoPolitik",
+  "description": "Advanced AI-powered platform for game theory education and geopolitical analysis",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  }
-
-  private async checkGeminiAPI(): Promise<boolean> {
-    try {
-      const response = await geminiService.generateContent('Health check', { maxOutputTokens: 10 });
-      return response.length > 0;
-    } catch {
-      return false;
+  ],
+  "shortcuts": [
+    {
+      "name": "Risk Assessment",
+      "short_name": "Risk",
+      "description": "Quick access to geopolitical risk analysis",
+      "url": "/risk-assessment"
+    },
+    {
+      "name": "Crisis Monitor",
+      "short_name": "Crisis",
+      "description": "Real-time crisis monitoring dashboard",
+      "url": "/crisis-monitoring"
     }
-  }
+  ]
 }
 ```
 
 ---
 
-## Future Roadmap
+## Remaining Features
 
-### Phase 2 Features (Q2 2024)
-- **Multi-language Support**: Internationalization for global users
-- **Advanced Visualizations**: 3D network graphs and interactive maps
-- **Mobile Application**: React Native mobile app
-- **Collaboration Tools**: Real-time collaborative analysis
-- **API Marketplace**: Third-party integrations and plugins
+While most features have been implemented, the following items are still pending for future development:
 
-### Phase 3 Features (Q3 2024)
-- **Enterprise Features**: SSO, advanced analytics, custom branding
-- **Machine Learning Pipeline**: Custom model training and deployment
-- **Blockchain Integration**: Decentralized prediction markets
-- **VR/AR Interface**: Immersive scenario visualization
-- **Academic Partnerships**: University course integration
+1. **VR/AR Visualization**
+   - Immersive 3D data visualization
+   - Virtual reality scenario exploration
+   - Augmented reality data overlays
 
-### Long-term Vision (2025+)
-- **Global Intelligence Network**: Crowdsourced analysis platform
-- **Autonomous Agents**: AI-powered strategic advisors
-- **Quantum Computing**: Advanced simulation capabilities
-- **Regulatory Compliance**: Government and enterprise certifications
+2. **Blockchain Integration**
+   - Decentralized prediction markets
+   - Immutable analysis records
+   - Token-based incentive systems
 
----
+3. **Quantum Computing Integration**
+   - Advanced simulation capabilities
+   - Complex multi-variable modeling
+   - Quantum-resistant security
 
-## Success Metrics & KPIs
+4. **Regulatory Compliance Framework**
+   - Government certification modules
+   - Compliance reporting tools
+   - Audit trail functionality
 
-### User Engagement Metrics
-- **Daily Active Users (DAU)**: Target 10,000+ by end of year
-- **Monthly Active Users (MAU)**: Target 50,000+ by end of year
-- **Session Duration**: Average 25+ minutes per session
-- **Feature Adoption**: 80%+ of users try core features within first week
+5. **Advanced Natural Language Generation**
+   - Automated policy brief generation
+   - Multi-language report translation
+   - Narrative scenario development
 
-### Educational Effectiveness
-- **Course Completion Rate**: 90%+ for beginner modules
-- **Assessment Pass Rate**: 85%+ average across all levels
-- **Knowledge Retention**: 75%+ retention after 30 days
-- **User Satisfaction**: 4.5+ stars average rating
-
-### Prediction Accuracy
-- **30-day Forecasts**: 75%+ accuracy rate
-- **Crisis Detection**: 80%+ early warning success rate
-- **Risk Assessment**: ±5% accuracy on risk scores
-- **Scenario Simulation**: 70%+ strategic recommendation effectiveness
-
-### Technical Performance
-- **Page Load Time**: <2 seconds average
-- **API Response Time**: <1 second for AI queries
-- **Uptime**: 99.9% availability
-- **Error Rate**: <0.1% of requests
-
-### Business Metrics
-- **User Acquisition Cost (CAC)**: <$50 per user
-- **Customer Lifetime Value (CLV)**: >$500 per user
-- **Monthly Recurring Revenue (MRR)**: $100K+ by end of year
-- **Churn Rate**: <5% monthly churn
+These features are planned for future releases and will further enhance the platform's capabilities.
 
 ---
 
-This comprehensive PRD serves as the foundation for building a world-class geopolitical analysis platform that combines cutting-edge AI technology with proven game theory principles to deliver unprecedented insights into global affairs.
+This PRD serves as the foundation for building a world-class geopolitical analysis platform that combines cutting-edge AI technology with proven game theory principles to deliver unprecedented insights into global affairs.

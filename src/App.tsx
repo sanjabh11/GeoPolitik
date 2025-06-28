@@ -18,6 +18,9 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const EconomicModeling = React.lazy(() => import('./pages/EconomicModeling'));
 const AdvancedAnalytics = React.lazy(() => import('./pages/AdvancedAnalytics'));
 const MobileOptimized = React.lazy(() => import('./pages/MobileOptimized'));
+const CollaborativeWorkspace = React.lazy(() => import('./pages/CollaborativeWorkspace'));
+const EnterpriseFeatures = React.lazy(() => import('./pages/EnterpriseFeatures'));
+const CustomModelTraining = React.lazy(() => import('./pages/CustomModelTraining'));
 
 function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -42,6 +45,9 @@ function App() {
                 <Route path="/economic-modeling" element={<EconomicModeling />} />
                 <Route path="/advanced-analytics" element={<AdvancedAnalytics />} />
                 <Route path="/mobile" element={<MobileOptimized />} />
+                <Route path="/collaborate" element={<CollaborativeWorkspace />} />
+                <Route path="/enterprise" element={<EnterpriseFeatures />} />
+                <Route path="/custom-models" element={<CustomModelTraining />} />
               </Routes>
             </Suspense>
             

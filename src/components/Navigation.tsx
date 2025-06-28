@@ -16,7 +16,8 @@ import {
   LogOut,
   DollarSign,
   BarChart3,
-  Smartphone
+  Smartphone,
+  Users
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from './AuthProvider';
@@ -32,6 +33,7 @@ const navigationItems = [
   { name: 'Economic Modeling', href: '/economic-modeling', icon: DollarSign },
   { name: 'Advanced Analytics', href: '/advanced-analytics', icon: BarChart3 },
   { name: 'Mobile Experience', href: '/mobile', icon: Smartphone },
+  { name: 'Collaborate', href: '/collaborate', icon: Users },
   { name: 'Profile', href: '/profile', icon: User }
 ];
 
