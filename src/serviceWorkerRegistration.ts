@@ -15,8 +15,16 @@ export function registerSW() {
   }
 
   // Check if we're in StackBlitz/WebContainer environment
-  if (window.location.hostname === 'localhost' && window.location.port === '5173') {
-    console.log('Service Worker registration skipped in development environment.');
+  const isStackBlitz = window.location.hostname.includes('stackblitz') || 
+                      window.location.hostname.includes('webcontainer') ||
+                      window.location.hostname === 'localhost' && window.location.port === '5173' ||
+                      // Additional check for StackBlitz-specific indicators
+                      window.location.origin.includes('stackblitz.io') ||
+                      // Check for WebContainer environment variables or global objects
+                      (typeof window !== 'undefined' && (window as any).__webcontainer__);
+
+  if (isStackBlitz) {
+    console.log('Service Worker registration skipped in StackBlitz/WebContainer environment.');
     return;
   }
 
