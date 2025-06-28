@@ -223,6 +223,44 @@ class DataService {
     }
   }
 
+  // Economic Modeling Methods
+  async saveEconomicModel(scenarioId: string, modelData: any): Promise<string> {
+    try {
+      const { data, error } = await supabase
+        .from('economic_models')
+        .insert({
+          scenario_id: scenarioId,
+          model_type: modelData.model_type || 'economic_impact',
+          parameters: modelData.parameters || {},
+          results: modelData.results || {},
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data.id
+    } catch (error) {
+      console.error('Error saving economic model:', error)
+      throw error
+    }
+  }
+
+  async getEconomicModels(userId: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('economic_models')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error fetching economic models:', error)
+      return []
+    }
+  }
+
   // Scenario Simulation Methods
   async getSimulationHistory(userId: string): Promise<any[]> {
     try {
@@ -259,6 +297,61 @@ class DataService {
     } catch (error) {
       console.error('Error saving scenario simulation:', error)
       throw error
+    }
+  }
+
+  // Advanced Analytics Methods
+  async saveNLQuery(userId: string, query: string, response: any): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('nl_queries')
+        .insert({
+          user_id: userId,
+          query_text: query,
+          response_data: response,
+          created_at: new Date().toISOString()
+        })
+      
+      if (error) throw error
+    } catch (error) {
+      console.error('Error saving NL query:', error)
+      // Continue even if save fails
+    }
+  }
+
+  async saveGeneratedReport(userId: string, report: any): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('generated_reports')
+        .insert({
+          user_id: userId,
+          report_type: report.type,
+          title: report.title,
+          content: report.sections,
+          created_at: new Date().toISOString()
+        })
+      
+      if (error) throw error
+    } catch (error) {
+      console.error('Error saving generated report:', error)
+      // Continue even if save fails
+    }
+  }
+
+  // Mobile & Offline Methods
+  async syncOfflineData(userId: string, offlineData: any): Promise<void> {
+    try {
+      // In a real implementation, this would sync with Supabase
+      console.log('Syncing offline data for user:', userId);
+      
+      // For now, just update localStorage
+      localStorage.setItem('offlineData', JSON.stringify({
+        ...offlineData,
+        lastSync: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error('Error syncing offline data:', error);
+      throw error;
     }
   }
 }
