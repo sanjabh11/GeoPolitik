@@ -61,13 +61,11 @@ serve(async (req) => {
       // Otherwise, configure monitoring
       const config = requestBody as MonitoringConfig
       
-      // Extract user ID from auth header
-      const authHeader = req.headers.get("Authorization")
-      const token = authHeader?.split(" ")[1]
+      // Get authenticated user context (automatically provided by Supabase)
       let userId = "anonymous"
       
-      if (token) {
-        const { data: { user }, error } = await supabase.auth.getUser(token)
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
         if (!error && user) {
           userId = user.id
           
@@ -86,6 +84,8 @@ serve(async (req) => {
               is_active: true
             })
         }
+      } catch (authError) {
+        console.log("No authenticated user, proceeding as anonymous")
       }
       
       // Run initial scan

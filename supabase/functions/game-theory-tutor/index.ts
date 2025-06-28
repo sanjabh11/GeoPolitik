@@ -52,16 +52,16 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") || ""
     )
     
-    // Extract user ID from auth header
-    const authHeader = req.headers.get("Authorization")
-    const token = authHeader?.split(" ")[1]
+    // Get authenticated user context (automatically provided by Supabase)
     let userId = "anonymous"
     
-    if (token) {
-      const { data: { user }, error } = await supabase.auth.getUser(token)
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
       if (!error && user) {
         userId = user.id
       }
+    } catch (authError) {
+      console.log("No authenticated user, proceeding as anonymous")
     }
     
     // Generate personalized tutorial with Gemini 2.5 Flash
