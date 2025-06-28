@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// Declare the supabase variable that will be exported
+let supabase: any
+
 // Allow the app to run in development mode without Supabase credentials
 if (!supabaseUrl || !supabaseAnonKey || 
     supabaseUrl === 'your_supabase_url' || 
@@ -62,9 +65,9 @@ if (!supabaseUrl || !supabaseAnonKey ||
     }
   }
   
-  export const supabase = mockSupabase as any
+  supabase = mockSupabase
 } else {
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  supabase = createClient(supabaseUrl, supabaseAnonKey)
 }
 
 // Database Types
@@ -188,3 +191,6 @@ export const initializeUserProfile = async (userId: string, role: string = 'stud
   
   return { data, error }
 }
+
+// Export the supabase client
+export { supabase }
