@@ -20,12 +20,6 @@ export function registerSW() {
     return;
   }
 
-  // Additional check for WebContainer environments
-  if (typeof window !== 'undefined' && (window as any).__webcontainer__) {
-    console.log('Service Worker registration skipped in WebContainer environment.');
-    return;
-  }
-
   window.addEventListener('load', () => {
     const swUrl = '/sw.js';
 
@@ -56,7 +50,7 @@ export function registerSW() {
         };
       })
       .catch(error => {
-        console.error('Error during service worker registration:', error);
+        console.log('Service Worker registration failed (this is expected in some development environments):', error.message);
       });
   });
 }
