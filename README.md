@@ -8,49 +8,101 @@ GeoPolitik is an advanced AI-powered platform that combines interactive game the
 
 ## 🚀 Key Features
 
-### 1. **AI-Powered Game Theory Tutorials**
+## 📚 Resource Integration Features (RI-1 to RI-8)
+
+The platform now includes full production-grade resource integration for books, videos, analytics, and recommendations:
+
+- **Open-access Game Theory Books**: Search, read, annotate, and bookmark open-access books (Bonanno, Osborne, etc.) via `/api/books/search`. Section and TOC endpoints allow deep linking and progress tracking.
+- **Commercial Book Metadata**: Discover commercial/copyrighted books using `/api/catalogue/book/search` (Google Books API integration).
+- **Book TOC & Section APIs**: `/api/books/{id}/toc` and `/api/books/{id}/section/{section_id}` provide structured navigation and section serving.
+- **PDF/HTML Reader**: Frontend `BookReader` component supports annotation, bookmarks, and real-time progress sync.
+- **YouTube Video Integration**: `/api/videos/search` and `/api/videos/playlist/{id}` endpoints provide lecture discovery and playlist embedding (YouTube Data API).
+- **Video Player with Progress**: Frontend `VideoPlayer` component tracks video progress, supports chapters and playlists.
+- **Resource Recommendations**: `/api/suggested-resources` endpoint delivers AI-powered book/video suggestions.
+- **Progress Analytics**: Supabase schema and edge function aggregate reading/viewing analytics, view history, and timestamps.
+
+**Access Guide:**
+- **API Endpoints**: See section below or use `/docs` (if enabled) for Swagger/OpenAPI docs.
+- **Frontend**: Use "Library" or "Resources" section in the app to:
+  - Search and read books (with annotation/bookmarking)
+  - Watch and track progress on YouTube lectures/playlists
+  - View analytics dashboard for your reading and viewing history
+
+**Environment Variables Required:**
+- `GOOGLE_BOOKS_API_KEY`, `YOUTUBE_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+
+For more, see [RESOURCE_INTEGRATION_FINAL_REPORT.md](./RESOURCE_INTEGRATION_FINAL_REPORT.md).
+
+
+### 1. **Enhanced AI-Powered Game Theory Tutorials**
 - Interactive learning modules from beginner to advanced levels
+- **NEW**: Formal game theory computations using Gambit Python integration
+- **NEW**: Nash equilibrium calculators with academic benchmarking
+- **NEW**: Cooperative game theory analysis and extensive form games
 - Real-time AI-generated content using Google Gemini 2.5 Flash
 - Geopolitical examples and scenarios
 - Adaptive learning with progress tracking
-- Nash equilibrium calculators and game trees
+- **NEW**: Personalized learning paths based on performance analysis
 
-### 2. **Real-Time Geopolitical Risk Assessment**
+### 2. **Enhanced Real-Time Geopolitical Risk Assessment**
 - Live risk scoring (0-100) for global regions
+- **NEW**: Multi-agent reinforcement learning (MARL) simulations
+- **NEW**: Strategic scenario modeling with AI-powered insights
 - Multi-factor analysis (political, economic, military, social)
+- **NEW**: Real-time academic research integration from Papers with Code
 - AI-powered confidence intervals and scenario analysis
 - Historical trend visualization
-- Automated data refresh and caching
+- **NEW**: Academic benchmarking and validation
 
-### 3. **Strategic Scenario Simulation**
-- Multi-actor game-theoretic modeling
-- AI-powered Nash equilibrium calculation
+### 3. **Advanced Strategic Scenario Simulation**
+- **NEW**: Multi-agent reinforcement learning (MARL) with Python microservices
+- **NEW**: Game-theoretic modeling with formal Nash equilibrium computation
+- **NEW**: Backtesting with academic benchmarking and statistical significance
+- **NEW**: Real-time research integration with trend analysis
+- AI-powered strategic recommendations and sensitivity analysis
 - Monte Carlo simulations with 1,000+ iterations
-- Strategic recommendations and sensitivity analysis
+- **NEW**: Collaborative research tools with peer review system
 - Interactive actor configuration
 
-### 4. **Crisis Event Monitoring**
+### 4. **Enhanced Crisis Event Monitoring**
 - Real-time crisis detection using AI analysis
+- **NEW**: Enhanced backtesting with model validation against academic benchmarks
+- **NEW**: Research integration with real-time academic paper analysis
 - Customizable alert thresholds and notifications
 - Multi-source intelligence aggregation
+- **NEW**: Collaborative research contributions and peer review
 - Escalation probability assessment
 - Browser notifications and real-time updates
 
 ### 5. **Advanced Economic Modeling**
 - GDP impact calculations with confidence intervals
+- **NEW**: Enhanced backtesting with academic benchmarking
+- **NEW**: Research paper integration for validation
 - Trade flow analysis with bilateral and multilateral metrics
+- **NEW**: Multi-agent simulations for economic scenarios
 - Employment effects modeling by sector
 - Welfare impact assessments
-- Fiscal implications analysis
+- **NEW**: Collaborative research data and validation
 
-### 6. **Mobile Application Features**
+### 6. **Enhanced Mobile Application Features**
 - Progressive Web App (PWA) capabilities
+- **NEW**: Real-time collaborative research tools
+- **NEW**: Enhanced backtesting with mobile-friendly interfaces
 - Offline data access and synchronization
+- **NEW**: Academic research integration on mobile
 - Push notifications for critical alerts
+- **NEW**: Collaborative research notifications
 - Mobile-optimized UI with touch-friendly interfaces
 - Installable app experience
 
 ### 7. **Advanced AI Features**
+- **NEW**: Formal game theory computations using Gambit
+- **NEW**: Multi-agent reinforcement learning (MARL) simulations
+- **NEW**: Enhanced backtesting with academic benchmarking
+- **NEW**: Real-time academic research integration
+- **NEW**: Collaborative research tools with peer review
+- **NEW**: Research paper analysis and trend detection
+- **NEW**: Statistical significance testing for models
 - Natural language querying for insights
 - Automated report generation
 - Predictive timeline analysis
@@ -138,6 +190,31 @@ npm run preview
 ```
 
 ## 📖 Usage Guide
+
+### Resource Integration Usage
+
+- **Books**: Go to the "Books" section to search, open, and annotate books. Your progress and bookmarks are saved automatically.
+- **Videos**: Go to the "Videos" section to search for lectures or explore playlists. Progress is tracked for each video.
+- **Analytics**: Access your reading/viewing analytics under "My Analytics". Data is updated in real-time.
+- **Recommendations**: Visit "Suggested Resources" for AI-curated book and video suggestions.
+
+**API Access:**
+- `/api/books/search?q=...` — Search open-access and commercial books
+- `/api/books/{id}/toc` — Table of contents for a book
+- `/api/books/{id}/section/{section_id}` — Section content
+- `/api/catalogue/book/search?q=...` — Commercial book metadata
+- `/api/videos/search?q=...` — Search YouTube lectures
+- `/api/videos/playlist/{id}` — Playlist videos
+- `/api/suggested-resources` — AI-powered resource recommendations
+- `/api/analytics` — User analytics (if enabled)
+
+**Frontend Components:**
+- `BookReader` (src/components/BookReader.tsx)
+- `VideoPlayer` (src/components/VideoPlayer.tsx)
+
+**Supabase/Edge Functions:**
+- See `supabase/migrations/` and `edge-functions/analytics-aggregation/`
+
 
 ### For Students
 1. **Start Learning**: Navigate to "Game Theory" section
