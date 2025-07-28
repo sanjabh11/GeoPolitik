@@ -2,7 +2,7 @@
 To create the world's most advanced interactive platform that combines game theory education with real-time geopolitical prediction capabilities, empowering users to understand and forecast international relations through mathematical modeling and AI-driven insights.
 
 ### Product Mission
-Enable students, researchers, policymakers, and analysts to master game theory concepts while accessing cutting-edge geopolitical predictions through an intuitive, AI-powered educational platform.
+Enable students, researchers, policymakers, and analysts to master game theory concepts while acces sing cutting-edge geopolitical predictionsthrough an intuitive, AI-powered educational platform.
 
 ### Success Metrics
 Educational: 90% course completion rate, 85% assessment pass rate

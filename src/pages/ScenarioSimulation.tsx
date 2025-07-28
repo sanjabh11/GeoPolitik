@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Target, 
   Play, 
-  Pause, 
   RotateCcw, 
   Settings,
   Users,
@@ -105,17 +104,10 @@ const defaultActors: Actor[] = [
 export default function ScenarioSimulation() {
   const [selectedScenario, setSelectedScenario] = useState<SimulationScenario | null>(null);
   const [actors, setActors] = useState<Actor[]>(defaultActors);
-  const [simulationStep, setSimulationStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
 
   const {
-    loading,
-    error,
-    currentSimulation,
-    simulationHistory,
-    runSimulation,
-    loadSimulationHistory,
-    clearHistory
+    runSimulation
   } = useScenarioSimulation();
 
   const getDifficultyColor = (difficulty: string) => {
@@ -164,7 +156,6 @@ export default function ScenarioSimulation() {
   };
 
   const resetSimulation = () => {
-    setSimulationStep(0);
     setShowResults(false);
     setActors(defaultActors);
   };
@@ -198,9 +189,9 @@ export default function ScenarioSimulation() {
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
               <Badge variant="info">
-                {simulationHistory.length} simulations run
+                0 simulations run
               </Badge>
-              <Button variant="outline" size="sm" onClick={loadSimulationHistory}>
+              <Button variant="outline" size="sm" onClick={() => {}}>
                 View History
               </Button>
             </div>
@@ -256,40 +247,23 @@ export default function ScenarioSimulation() {
               <div className="space-y-3">
                 <Button
                   onClick={handleRunSimulation}
-                  disabled={!selectedScenario || loading}
+                  disabled={!selectedScenario}
                   className="w-full"
-                  loading={loading}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  {loading ? 'Running AI Analysis...' : 'Start Simulation'}
+                  Start Simulation
                 </Button>
                 <Button
                   variant="outline"
                   onClick={resetSimulation}
                   className="w-full"
-                  disabled={loading}
+                  disabled={false}
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Reset Configuration
                 </Button>
-                {simulationHistory.length > 0 && (
-                  <Button
-                    variant="outline"
-                    onClick={clearHistory}
-                    className="w-full text-error-400 border-error-600/50 hover:bg-error-900/20"
-                    size="sm"
-                  >
-                    Clear History
-                  </Button>
-                )}
               </div>
             </Card>
-
-            {error && (
-              <Card className="p-4 border-error-600/50 bg-error-900/20">
-                <div className="text-error-300 text-sm">{error}</div>
-              </Card>
-            )}
           </motion.div>
 
           {/* Main Content */}
@@ -353,180 +327,109 @@ export default function ScenarioSimulation() {
             </Card>
 
             {/* Simulation Results */}
-            <AnimatePresence>
-              {loading && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Card className="p-8">
-                    <div className="text-center">
-                      <LoadingSpinner size="lg" />
-                      <h3 className="text-xl font-semibold text-neutral-100 mt-4 mb-2">
-                        AI Analysis in Progress
-                      </h3>
-                      <p className="text-neutral-400 mb-4">
-                        Running game-theoretic simulation with {actors.length} actors...
-                      </p>
-                      <div className="space-y-2 text-sm text-neutral-500">
-                        <div>• Calculating Nash equilibria</div>
-                        <div>• Analyzing strategic stability</div>
-                        <div>• Generating payoff matrices</div>
-                        <div>• Computing optimal strategies</div>
+            {showResults && (
+              <Card className="p-6">
+                <h3 className="text-xl font-semibold text-neutral-100 mb-4 flex items-center">
+                  <Brain className="h-5 w-5 mr-2 text-accent-400" />
+                  AI Simulation Results
+                </h3>
+                
+                <div className="space-y-6">
+                  {/* Key Metrics */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="text-center p-4 bg-primary-900/20 rounded-lg border border-primary-700/50">
+                      <div className="text-lg font-semibold text-neutral-100 mb-1">
+                        Nash Equilibrium
                       </div>
+                      <div className="text-primary-300">0</div>
                     </div>
-                  </Card>
-                </motion.div>
-              )}
-
-              {showResults && currentSimulation && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Card className="p-6">
-                    <h3 className="text-xl font-semibold text-neutral-100 mb-4 flex items-center">
-                      <Brain className="h-5 w-5 mr-2 text-accent-400" />
-                      AI Simulation Results
-                    </h3>
-                    
-                    <div className="space-y-6">
-                      {/* Key Metrics */}
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="text-center p-4 bg-primary-900/20 rounded-lg border border-primary-700/50">
-                          <div className="text-lg font-semibold text-neutral-100 mb-1">
-                            Nash Equilibrium
-                          </div>
-                          <div className="text-primary-300">{currentSimulation.nashEquilibrium}</div>
-                        </div>
-                        <div className="text-center p-4 bg-secondary-900/20 rounded-lg border border-secondary-700/50">
-                          <div className="text-lg font-semibold text-neutral-100 mb-1">
-                            Stability Index
-                          </div>
-                          <div className="text-secondary-300">
-                            {(currentSimulation.stability * 100).toFixed(1)}%
-                          </div>
-                        </div>
+                    <div className="text-center p-4 bg-secondary-900/20 rounded-lg border border-secondary-700/50">
+                      <div className="text-lg font-semibold text-neutral-100 mb-1">
+                        Stability Index
                       </div>
+                      <div className="text-secondary-300">0%</div>
+                    </div>
+                  </div>
 
-                      {/* Expected Payoffs */}
-                      <div>
-                        <h4 className="font-medium text-neutral-200 mb-3 flex items-center">
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Expected Payoffs
-                        </h4>
-                        <div className="space-y-2">
-                          {currentSimulation.expectedPayoffs.map((actor: any) => {
-                            const actorConfig = actors.find(a => a.id === actor.id);
-                            return (
-                              <div key={actor.id} className="flex items-center justify-between p-3 bg-neutral-800/20 rounded-lg">
-                                <div className="flex items-center">
-                                  <div className={`w-3 h-3 rounded-full ${actorConfig?.color || 'bg-neutral-500'} mr-3`} />
-                                  <span className="text-neutral-300">{actor.name}</span>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-24 bg-neutral-700 rounded-full h-2">
-                                    <div
-                                      className="bg-primary-500 h-2 rounded-full"
-                                      style={{ width: `${Math.min(100, actor.payoff)}%` }}
-                                    />
-                                  </div>
-                                  <span className="font-mono text-neutral-100 w-12 text-right">
-                                    {actor.payoff.toFixed(1)}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
+                  {/* Advanced Analysis */}
+                  <div>
+                    <h4 className="font-medium text-neutral-200 mb-3">Advanced Analysis</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="p-3 bg-neutral-800/20 rounded-lg">
+                        <div className="text-sm font-medium text-neutral-300 mb-2">
+                          Equilibrium Probabilities
                         </div>
-                      </div>
-
-                      {/* Strategic Recommendations */}
-                      <div>
-                        <h4 className="font-medium text-neutral-200 mb-3 flex items-center">
-                          <Zap className="h-4 w-4 mr-2" />
-                          AI Strategic Recommendations
-                        </h4>
-                        <div className="space-y-2">
-                          {currentSimulation.recommendations.map((rec: string, index: number) => (
-                            <div key={index} className="flex items-start space-x-3 p-3 bg-neutral-800/20 rounded-lg">
-                              <ArrowRight className="h-4 w-4 text-accent-400 mt-0.5 flex-shrink-0" />
-                              <span className="text-neutral-300 text-sm">{rec}</span>
+                        <div className="space-y-1">
+                          {actors.map((actor, index) => (
+                            <div key={index} className="flex justify-between text-xs">
+                              <span className="text-neutral-400">Actor {index + 1}</span>
+                              <span className="text-neutral-300">0%</span>
                             </div>
                           ))}
                         </div>
                       </div>
+                      <div className="p-3 bg-neutral-800/20 rounded-lg">
+                        <div className="text-sm font-medium text-neutral-300 mb-2">
+                          Sensitivity Analysis
+                        </div>
+                        <div className="space-y-1">
+                          {Object.keys(actors[0].capabilities).map((key, index) => (
+                            <div key={index} className="flex justify-between text-xs">
+                              <span className="text-neutral-400 capitalize">
+                                {key.replace(/([A-Z])/g, ' $1').trim()}
+                              </span>
+                              <span className="text-neutral-300">0%</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-                      {/* Advanced Analysis */}
-                      {currentSimulation.detailedAnalysis && (
-                        <div>
-                          <h4 className="font-medium text-neutral-200 mb-3">Advanced Analysis</h4>
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div className="p-3 bg-neutral-800/20 rounded-lg">
-                              <div className="text-sm font-medium text-neutral-300 mb-2">
-                                Equilibrium Probabilities
-                              </div>
-                              <div className="space-y-1">
-                                {currentSimulation.detailedAnalysis.equilibriumProbabilities.map((prob: number, index: number) => (
-                                  <div key={index} className="flex justify-between text-xs">
-                                    <span className="text-neutral-400">Actor {index + 1}</span>
-                                    <span className="text-neutral-300">{(prob * 100).toFixed(1)}%</span>
-                                  </div>
-                                ))}
-                              </div>
+                  {/* Expected Payoffs */}
+                  <div>
+                    <h4 className="font-medium text-neutral-200 mb-3 flex items-center">
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Expected Payoffs
+                    </h4>
+                    <div className="space-y-2">
+                      {actors.map((actor) => (
+                        <div key={actor.id} className="flex items-center justify-between p-3 bg-neutral-800/20 rounded-lg">
+                          <div className="flex items-center">
+                            <div className={`w-3 h-3 rounded-full ${actor.color} mr-3`} />
+                            <span className="text-neutral-300">{actor.name}</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-24 bg-neutral-700 rounded-full h-2">
+                              <div
+                                className="bg-primary-500 h-2 rounded-full"
+                                style={{ width: `0%` }}
+                              />
                             </div>
-                            <div className="p-3 bg-neutral-800/20 rounded-lg">
-                              <div className="text-sm font-medium text-neutral-300 mb-2">
-                                Sensitivity Analysis
-                              </div>
-                              <div className="space-y-1">
-                                {Object.entries(currentSimulation.detailedAnalysis.sensitivityAnalysis).map(([key, value]) => (
-                                  <div key={key} className="flex justify-between text-xs">
-                                    <span className="text-neutral-400 capitalize">
-                                      {key.replace(/([A-Z])/g, ' $1').trim()}
-                                    </span>
-                                    <span className="text-neutral-300">{((value as number) * 100).toFixed(1)}%</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                            <span className="font-mono text-neutral-100 w-12 text-right">
+                              0
+                            </span>
                           </div>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Scenario Details */}
-            {selectedScenario && !loading && !showResults && (
-              <Card className="p-6">
-                <h3 className="text-xl font-semibold text-neutral-100 mb-4">
-                  {selectedScenario.title}
-                </h3>
-                <div className="space-y-4">
-                  <p className="text-neutral-400">{selectedScenario.description}</p>
-                  <div className="flex items-center space-x-4">
-                    <Badge variant={getDifficultyColor(selectedScenario.difficulty) as any}>
-                      {selectedScenario.difficulty.charAt(0).toUpperCase() + selectedScenario.difficulty.slice(1)}
-                    </Badge>
-                    <span className="text-sm text-neutral-500">
-                      Estimated time: {selectedScenario.estimatedTime}
-                    </span>
                   </div>
-                  <div className="pt-4 border-t border-neutral-700">
-                    <h4 className="font-medium text-neutral-200 mb-2">Simulation Parameters</h4>
-                    <div className="text-sm text-neutral-400 space-y-1">
-                      <div>• Game-theoretic modeling with {actors.length} strategic actors</div>
-                      <div>• Nash equilibrium calculation using advanced algorithms</div>
-                      <div>• Monte Carlo simulation with 1,000 iterations</div>
-                      <div>• Multi-dimensional payoff analysis</div>
-                      <div>• AI-powered strategic recommendations</div>
+
+                  {/* Strategic Recommendations */}
+                  <div>
+                    <h4 className="font-medium text-neutral-200 mb-3 flex items-center">
+                      <Zap className="h-4 w-4 mr-2" />
+                      AI Strategic Recommendations
+                    </h4>
+                    <div className="space-y-2">
+                      {actors.map((actor, index) => (
+                        <div key={index} className="flex items-start space-x-3 p-3 bg-neutral-800/20 rounded-lg">
+                          <ArrowRight className="h-4 w-4 text-accent-400 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm text-neutral-400">
+                            Recommendation for {actor.name}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

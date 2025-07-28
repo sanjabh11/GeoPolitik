@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { geminiService } from '../services/geminiService'
 import { dataService } from '../services/dataService'
-import { supabase } from '../lib/supabase'
 import { useSupabaseEdgeFunctions } from './useSupabaseEdgeFunctions'
 import { useAuth } from '../components/AuthProvider'
 import { useToast } from './useToast'
@@ -100,20 +99,20 @@ export function useScenarioSimulation() {
       // Enhance with additional analysis if needed
       const enhancedResults: SimulationResults = {
         ...results,
-        detailedAnalysis: results.detailedAnalysis || {
+        detailedAnalysis: results?.detailedAnalysis || {
           strategyMatrix: generateStrategyMatrix(config.actors),
           equilibriumProbabilities: generateEquilibriumProbabilities(config.actors.length),
-          sensitivityAnalysis: generateSensitivityAnalysis(config)
+          sensitivityAnalysis: generateSensitivityAnalysis()
         }
       }
 
       setCurrentSimulation(enhancedResults)
-      showToast('success', 'Simulation Complete', `Nash equilibrium: ${enhancedResults.nashEquilibrium}`)
+      showToast('success', 'Simulation Complete', `Nash equilibrium: ${enhancedResults?.nashEquilibrium || 'Unknown'}`)
 
       // Save to database and history
       let simulationId = 'local-' + Date.now()
       
-      if (user) {
+      if (user && enhancedResults) {
         simulationId = await dataService.saveScenarioSimulation(user.id, config, enhancedResults)
       }
       
@@ -154,7 +153,7 @@ export function useScenarioSimulation() {
     return probs.map(p => p / sum)
   }
 
-  const generateSensitivityAnalysis = (config: ScenarioConfig): Record<string, number> => {
+  const generateSensitivityAnalysis = (): Record<string, number> => {
     return {
       militaryCapabilityImpact: parseFloat((Math.random() * 0.5).toFixed(2)),
       economicCapabilityImpact: parseFloat((Math.random() * 0.3).toFixed(2)),

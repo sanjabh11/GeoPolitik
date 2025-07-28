@@ -1,105 +1,132 @@
-import axios from 'axios'
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
+
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
 interface GeminiRequest {
   contents: Array<{
     parts: Array<{
-      text: string
-    }>
-  }>
+      text: string;
+    }>;
+  }>;
   generationConfig?: {
-    temperature?: number
-    topK?: number
-    topP?: number
-    maxOutputTokens?: number
-  }
+    temperature?: number;
+    topK?: number;
+    topP?: number;
+    maxOutputTokens?: number;
+  };
 }
 
 interface GeminiResponse {
   candidates: Array<{
     content: {
       parts: Array<{
-        text: string
-      }>
-    }
-  }>
+        text: string;
+      }>;
+    };
+  }>;
 }
 
 class GeminiService {
-  private apiKey: string
-  private requestCount: number = 0
-  private lastRequestTime: number = 0
-  private readonly RATE_LIMIT_DELAY = 1000 // 1 second between requests
+  private apiKey: string;
+  private requestCount: number = 0;
+  private lastRequestTime: number = 0;
+  private readonly RATE_LIMIT_DELAY = 1000; // 1 second between requests
 
   constructor() {
-    this.apiKey = GEMINI_API_KEY
-    if (!this.apiKey || this.apiKey === 'AIzaSyDmpYnphVeUXH1v4NUyhR47Jx61zIU3GYQ') {
-      console.warn('Gemini API key not found or using placeholder. Using mock responses.')
+    this.apiKey = GEMINI_API_KEY;
+    if (!this.apiKey || this.apiKey.trim() === '') {
+      console.warn('Gemini API key not found or empty. Using mock responses.');
     }
   }
 
   private async rateLimitedRequest(requestFn: () => Promise<any>): Promise<any> {
-    const now = Date.now()
-    const timeSinceLastRequest = now - this.lastRequestTime
-    
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+
     if (timeSinceLastRequest < this.RATE_LIMIT_DELAY) {
-      await new Promise(resolve => setTimeout(resolve, this.RATE_LIMIT_DELAY - timeSinceLastRequest))
+      await new Promise((resolve) => setTimeout(resolve, this.RATE_LIMIT_DELAY - timeSinceLastRequest));
     }
-    
-    this.lastRequestTime = Date.now()
-    this.requestCount++
-    
-    return requestFn()
+
+    this.lastRequestTime = Date.now();
+    this.requestCount++;
+
+    return requestFn();
   }
 
   async generateContent(prompt: string, config?: GeminiRequest['generationConfig']): Promise<string> {
     if (!this.apiKey || this.apiKey === 'AIzaSyDmpYnphVeUXH1v4NUyhR47Jx61zIU3GYQ' || USE_MOCK_DATA) {
-      console.warn('Using mock response due to missing/invalid API key or development mode.')
-      return this.getMockResponse(prompt)
+      console.warn('Using mock response due to missing/invalid API key or development mode.');
+      return this.getMockResponse(prompt);
     }
 
     try {
-      return await this.rateLimitedRequest(async () => {
-        const request: GeminiRequest = {
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 4096,
-            ...config
-          }
-        }
+      if (!this.apiKey) {
+        throw new Error('Gemini API key not configured');
+      }
 
-        const response = await axios.post<GeminiResponse>(
-          `${GEMINI_API_URL}?key=${this.apiKey}`,
-          request,
+      const request: GeminiRequest = {
+        contents: [
           {
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            timeout: 30000 // 30 second timeout
-          }
-        )
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 4096,
+          ...config,
+        },
+      };
 
-        return response.data.candidates[0]?.content?.parts[0]?.text || 'No response generated'
-      })
+      const response = await fetch(`${GEMINI_API_URL}?key=${this.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data: GeminiResponse = await response.json();
+
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0]) {
+        throw new Error('Invalid Gemini API response structure');
+      }
+
+      const content = data.candidates[0].content.parts[0].text;
+
+      // Parse the JSON response, handling markdown code fences
+      let parsedContent: any;
+      try {
+        // Remove markdown code fences if present
+        const cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        parsedContent = JSON.parse(cleanedContent);
+      } catch (error) {
+        console.error('Failed to parse Gemini response:', error);
+        console.error('Raw response:', content);
+        throw new Error('Invalid response format from Gemini API');
+      }
+
+      return JSON.stringify(parsedContent);
     } catch (error: any) {
-      console.error('Gemini API Error:', error.response?.status, error.response?.statusText)
-      
+      console.error('Gemini API Error:', error.message);
+
       // Handle specific error codes
       if (error.response?.status === 429) {
-        console.warn('Rate limit exceeded, using mock response')
+        console.warn('Rate limit exceeded, using mock response');
       } else if (error.response?.status === 403) {
-        console.warn('API key invalid or quota exceeded, using mock response')
+        console.warn('API key invalid or quota exceeded, using mock response');
       } else if (error.response?.status === 400) {
+        console.warn('Bad request to Gemini API, using mock response');
         console.warn('Bad request to Gemini API, using mock response')
       }
       
@@ -112,20 +139,23 @@ class GeminiService {
     if (prompt.includes('game theory')) {
       return JSON.stringify({
         concept: "Nash Equilibrium",
-        explanation: "A Nash equilibrium is a solution concept where no player can unilaterally improve their payoff by changing their strategy. It represents a stable state where each player's strategy is optimal given the strategies of other players.",
-        geopoliticalExample: "In nuclear deterrence, both superpowers choosing to maintain nuclear arsenals represents a Nash equilibrium. Neither country can unilaterally disarm without becoming vulnerable, even though mutual disarmament might be more efficient.",
+        explanation: "A state in which no player can benefit by changing their strategy while the other players keep their strategies unchanged.",
+        geopoliticalExample: "The arms race between the US and the Soviet Union during the Cold War can be modeled as a Prisoner's Dilemma, a classic game theory scenario. Both sides continued to arm themselves, fearing that if they disarmed while the other did not, they would be at a significant disadvantage. The Nash Equilibrium was for both to keep arming, even though mutual disarmament would have been a better outcome for both.",
         interactiveElement: {
-          type: "scenario",
-          data: {
-            players: ["Country A", "Country B"],
-            strategies: ["Cooperate", "Defect"],
-            payoffs: [[3, 3], [0, 5], [5, 0], [1, 1]]
-          }
+          type: "quiz",
+          question: "In the Prisoner's Dilemma, what is the rational choice for an individual prisoner, not knowing the other's choice?",
+          options: ["To cooperate with the other prisoner", "To defect and betray the other prisoner"],
+          correctAnswer: 1
         },
         assessmentQuestion: {
-          question: "What happens when both players choose their dominant strategy in a Prisoner's Dilemma?",
-          options: ["They achieve the optimal outcome", "They reach a suboptimal Nash equilibrium", "No equilibrium is reached", "Multiple equilibria are possible"],
-          correctAnswer: 1
+          question: "Which of the following is the best example of a Nash Equilibrium?",
+          options: [
+            "Two competing companies both lowering their prices to attract more customers, resulting in lower profits for both.",
+            "A country deciding to disarm unilaterally, hoping others will follow.",
+            "A group of fishermen agreeing to limit their catch to preserve fish stocks for the future.",
+            "One company raising its prices to maximize its own profit, assuming others will keep their prices stable."
+          ],
+          correctAnswer: 0
         }
       })
     }

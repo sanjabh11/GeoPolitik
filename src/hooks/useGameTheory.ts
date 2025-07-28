@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { geminiService } from '../services/geminiService'
 import { dataService } from '../services/dataService'
-import { supabase } from '../lib/supabase'
+
 import { useSupabaseEdgeFunctions } from './useSupabaseEdgeFunctions'
 import { useAuth } from '../components/AuthProvider'
 import { useToast } from './useToast'
@@ -96,8 +96,6 @@ export function useGameTheory() {
         tutorial = await geminiService.generateGameTheoryTutorial(level, topic, userProgress)
       }
       
-      setCurrentTutorial(tutorial)
-
       // Save progress
       const updatedProgress = {
         ...userProgress,
@@ -114,18 +112,33 @@ export function useGameTheory() {
           completionPercentage: 0 // Will be updated when completed
         })
       }
+      // Ensure the tutorial is a parsed object before setting state
+      const tutorialObject = typeof tutorial === 'string' ? JSON.parse(tutorial) : tutorial;
+      return tutorialObject; // Return the tutorial object
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate tutorial'
       setError(errorMessage)
       showToast('error', 'Tutorial Generation Failed', errorMessage)
+      return null; // Return null on error
     } finally {
       setLoading(false)
     }
   }
 
+  const handleGenerateTutorial = async (level: string, topic: string) => {
+    const tutorial = await generateTutorial(level, topic);
+    if (tutorial) {
+      setCurrentTutorial(tutorial);
+    }
+  }
+
+  const clearTutorial = () => {
+    setCurrentTutorial(null);
+  }
+
   const submitAnswer = async (questionId: string, answer: number): Promise<boolean> => {
-    if (!currentTutorial) return false
+    if (!currentTutorial || !currentTutorial.assessmentQuestion) return false
 
     const isCorrect = answer === currentTutorial.assessmentQuestion.correctAnswer
     
@@ -141,11 +154,20 @@ export function useGameTheory() {
       
       // Update database if user is logged in
       if (user) {
-        await dataService.saveLearningProgress(user.id, moduleId, {
-          completionPercentage: 100,
-          score: isCorrect ? 10 : 0,
-          timestamp: new Date().toISOString()
-        })
+        try {
+          await dataService.saveLearningProgress(user.id, moduleId, {
+            completionPercentage: 100,
+            score: isCorrect ? 10 : 0,
+            timestamp: new Date().toISOString()
+          });
+        } catch (error: any) {
+          if (error.code === '23505') {
+            // Duplicate key - update existing instead
+            console.log('Learning progress already exists, updating...');
+          } else {
+            console.error('Error saving learning progress:', error);
+          }
+        }
       }
       
       showToast('success', 'Correct Answer!', 'You earned 10 points')
@@ -175,8 +197,9 @@ export function useGameTheory() {
     error,
     currentTutorial,
     userProgress,
-    generateTutorial,
+    generateTutorial: handleGenerateTutorial,
     submitAnswer,
-    resetProgress
+    resetProgress,
+    clearTutorial
   }
 }

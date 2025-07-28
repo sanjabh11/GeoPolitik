@@ -218,5 +218,5 @@ export function useAdvancedAnalytics() {
     loadQueryHistory,
     loadReports,
     setCurrentResponse
-  };
+  }; setCurrentResponse
 }

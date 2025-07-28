@@ -48,28 +48,9 @@ export function useRiskAssessment() {
     setError(null)
 
     try {
-      // Check for cached assessments first
-      const cached = await dataService.getCachedRiskAssessments(regions)
-      if (cached.length > 0) {
-        const mappedAssessments = cached.map(item => ({
-          region: item.region,
-          riskScore: item.risk_score,
-          confidenceInterval: item.confidence_interval,
-          primaryDrivers: item.factors,
-          scenarios: {
-            best: { probability: 0.2, description: 'Diplomatic resolution' },
-            worst: { probability: 0.3, description: 'Escalation scenario' },
-            mostLikely: { probability: 0.5, description: 'Status quo continuation' }
-          },
-          lastUpdated: item.created_at
-        }))
-        
-        setAssessments(mappedAssessments)
-        setLastUpdate(new Date())
-        setLoading(false)
-        showToast('info', 'Using cached data', 'Showing recent risk assessments')
-        return
-      }
+      // Disable cache - always use live compute for fresh data
+      // Cache check removed to ensure real-time analysis
+      console.log('Using live compute for risk assessment - cache disabled')
 
       // Try to use edge function first
       const { data: edgeData, error: edgeError } = await getRiskAssessment(regions, factors)
@@ -91,8 +72,12 @@ export function useRiskAssessment() {
         riskData = await geminiService.generateRiskAssessment(regions, factors)
       }
       
-      // Enhance with real data
-      const enhancedAssessments = riskData.assessments.map((assessment: any) => ({
+      // Defensive: ensure riskData and riskData.assessments are valid arrays
+      const assessmentsArray = Array.isArray(riskData?.assessments)
+        ? riskData.assessments
+        : [];
+
+      const enhancedAssessments = assessmentsArray.map((assessment: any) => ({
         ...assessment,
         lastUpdated: new Date().toISOString()
       }))
@@ -106,23 +91,9 @@ export function useRiskAssessment() {
         await dataService.saveRiskAssessment(assessment)
       }
 
-      // Set up real-time subscription if not already set up
-      if (!subscription) {
-        const sub = supabase
-          .channel('risk_updates')
-          .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'risk_assessments',
-            filter: `region=in.(${regions.join(',')})`
-          }, (payload) => {
-            handleRiskUpdate(payload.new)
-          })
-          .subscribe()
-        
-        setSubscription(sub)
-      }
-
+      // Real-time subscriptions disabled due to persistent WebSocket connection failures
+      // App will rely on manual refresh or polling instead
+      // This prevents console errors and ensures stability
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate risk assessment'
       setError(errorMessage)

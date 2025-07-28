@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Brain, 
@@ -7,11 +7,6 @@ import {
   ArrowRight, 
   ArrowLeft,
   BookOpen,
-  Target,
-  Users,
-  TrendingUp,
-  Play,
-  Pause,
   RotateCcw,
   Lightbulb
 } from 'lucide-react';
@@ -109,7 +104,8 @@ export default function GameTheoryTutorial() {
     userProgress,
     generateTutorial,
     submitAnswer,
-    resetProgress
+    resetProgress,
+    clearTutorial
   } = useGameTheory();
 
   const getDifficultyColor = (difficulty: string) => {
@@ -121,13 +117,19 @@ export default function GameTheoryTutorial() {
     }
   };
 
-  const handleModuleSelect = async (module: TutorialModule) => {
+  useEffect(() => {
+    if (selectedModule) {
+      generateTutorial(selectedModule.difficulty, selectedModule.title);
+    }
+  }, [selectedModule]);
+
+  const handleModuleSelect = (module: TutorialModule) => {
     if (!module.locked) {
+      clearTutorial(); // Clear previous tutorial
       setSelectedModule(module);
       setCurrentStep(0);
       setShowFeedback(false);
       setUserAnswer(null);
-      await generateTutorial(module.difficulty, module.title);
     }
   };
 
@@ -287,22 +289,23 @@ export default function GameTheoryTutorial() {
           >
             <AnimatePresence mode="wait">
               {loading ? (
-                <Card className="p-12 text-center">
-                  <LoadingSpinner size="lg" />
-                  <p className="text-neutral-400 mt-4">Generating AI-powered tutorial content...</p>
-                </Card>
+                <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <Card className="flex flex-col items-center justify-center h-96 p-12">
+                    <LoadingSpinner size="lg" />
+                    <p className="text-neutral-400 mt-4">Generating AI-powered tutorial content...</p>
+                  </Card>
+                </motion.div>
               ) : error ? (
-                <Card className="p-12 text-center">
-                  <div className="text-error-400 mb-4">⚠️ Error</div>
-                  <p className="text-neutral-400">{error}</p>
-                  <Button 
-                    className="mt-4" 
-                    onClick={() => selectedModule && handleModuleSelect(selectedModule)}
-                  >
-                    Retry
-                  </Button>
-                </Card>
-              ) : selectedModule && currentTutorial ? (
+                <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <Card className="p-12 text-center">
+                    <div className="text-error-400 mb-4">⚠️ Error</div>
+                    <p className="text-neutral-400">{error}</p>
+                    <Button onClick={() => handleModuleSelect(selectedModule!)} className="mt-4">
+                      Retry
+                    </Button>
+                  </Card>
+                </motion.div>
+              ) : currentTutorial && selectedModule ? (
                 <motion.div
                   key={selectedModule.id}
                   initial={{ opacity: 0, x: 20 }}
@@ -390,10 +393,10 @@ export default function GameTheoryTutorial() {
                       <div className="border-t border-neutral-700 pt-6">
                         <h4 className="font-medium text-neutral-200 mb-4">Assessment Question</h4>
                         <p className="text-neutral-300 mb-4">
-                          {currentTutorial.assessmentQuestion.question}
+                          {currentTutorial.assessmentQuestion?.question || 'No question available'}
                         </p>
                         <div className="space-y-2">
-                          {currentTutorial.assessmentQuestion.options.map((option, index) => (
+                          {currentTutorial.assessmentQuestion?.options?.map((option, index) => (
                             <label 
                               key={index}
                               className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
@@ -434,7 +437,7 @@ export default function GameTheoryTutorial() {
                               <div className="text-sm text-neutral-400 mt-1">
                                 {isCorrect 
                                   ? 'Great job! You understand the concept well.' 
-                                  : `The correct answer is: ${currentTutorial.assessmentQuestion.options[currentTutorial.assessmentQuestion.correctAnswer]}`
+                                  : `The correct answer is: ${currentTutorial.assessmentQuestion?.options?.[currentTutorial.assessmentQuestion?.correctAnswer || 0] || 'Answer not available'}`
                                 }
                               </div>
                             </motion.div>

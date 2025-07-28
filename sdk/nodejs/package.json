@@ -1,0 +1,41 @@
+{
+  "name": "geopolitik-sdk",
+  "version": "1.0.0",
+  "description": "Official Node.js SDK for GeoPolitik API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "geopolitics",
+    "game-theory",
+    "risk-assessment",
+    "api",
+    "sdk"
+  ],
+  "author": "GeoPolitik Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geopolitik/sdk-nodejs"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
