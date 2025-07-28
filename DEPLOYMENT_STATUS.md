@@ -27,8 +27,7 @@
 ## 🔧 Immediate Action Items
 
 ### High Priority
-1. **Verify NewsAPI Key**: Test `550da854f5db4f58b4b1068778f30c56` at https://newsapi.org
-2. **Verify Gemini Key**: Test `AIzaSyAWcIaiYoIO9ZovQBRz8U_bAVkQKfuu1iI` at Google Cloud Console
+ 
 3. **Fix Edge Function Logic**: Review and debug edge function implementations
 
 ### Medium Priority
@@ -54,16 +53,16 @@
 
 ```bash
 # Test each endpoint
-export SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dW5uYW5rcWdmb2tldWZ2c3J2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTg4NjIxOSwiZXhwIjoyMDY1NDYyMjE5fQ.P_3O9lPLvi_4ZKzjlsl1hUtzBOwZ-3Eo_04rKq70TBs"
+
 
 # Test health
-curl -X POST "https://kvunnankqgfokeufvsrv.supabase.co/functions/v1/health" \
+ 
   -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
   -H "Content-Type: application/json" \
   -d '{}'
 
 # Test game theory tutor
-curl -X POST "https://kvunnankqgfokeufvsrv.supabase.co/functions/v1/game-theory-tutor" \
+ 
   -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
   -H "Content-Type: application/json" \
   -d '{"level":"basic","topic":"prisoners dilemma"}'
